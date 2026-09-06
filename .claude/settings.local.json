@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "Bash(gh api *)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(./.venv/bin/blenderproc pip *)",
+      "Read(//home/pandoxo/blender/**)",
+      "Bash(./.venv/bin/blenderproc run *)",
+      "Bash(blender --version)",
+      "Bash(python3 -c \"import bpy; print\\('bpy module:', bpy.__file__\\)\")",
+      "Bash(pip list *)",
+      "Bash(python3 -c \"import pxr; print\\('USD:', pxr.__file__\\)\")",
+      "Bash(.venv/bin/python run_batch.py --config config_scene.yaml --script generate_scene.py --jobs 2)"
+    ]
+  }
+}

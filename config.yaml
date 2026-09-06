@@ -1,0 +1,92 @@
+# Ground-plane variant: trash on a bare slab under an HDRI.
+# Every randomisation range lives here so tuning the distribution never means
+# touching the generator. See config_scene.yaml for the real-environment variant.
+
+output_dir: "output/plane"
+num_scenes: 50            # scenes rendered by run_batch.py
+views_per_scene: 6        # camera poses per scene (cheap - the scene is already built)
+seed: 42
+
+resolution: [640, 640]
+render_samples: 128
+noise_threshold: 0.01     # stop sampling a pixel early once it is clean enough; null disables
+denoiser: "OPTIX"         # "OPTIX" (NVIDIA GPU), "INTEL" (OpenImageDenoise, CPU) or null
+depth_output: false
+
+objects:
+  assets_file: "assets.yaml"
+  model_dirs:
+    # resources/objects holds one item per .blend. Do not add
+    # resources/objects_needs_split: the glob is recursive and those files hold
+    # several items each.
+    - "resources/objects"
+    - "~/blenderkit_data/models"
+  min_objects_per_scene: 3
+  max_objects_per_scene: 8
+
+ground:
+  size_m: 20.0
+  thickness_m: 0.2
+  color_range: [[0.15, 0.15, 0.15], [0.6, 0.6, 0.6]]
+  roughness_range: [0.4, 1.0]
+
+spawn:
+  zone_size_m: 1.0        # side length of the square patch objects are dropped into
+
+hdri:
+  folders:
+    - "resources/haven/hdris"
+    - "~/blenderkit_data/hdrs"
+  strength_range: [0.7, 1.5]
+  rotation_range_deg: [0, 360]   # rotates the sun and every shadow with it
+  # Point lights are only added under HDRIs whose filename contains one of these.
+  dark_patterns: ["night", "moonless", "dusk", "evening", "lamp", "indoor"]
+
+lights:
+  always: false           # true = add point lights regardless of the HDRI
+  type: "POINT"
+  count_range: [1, 3]
+  energy_range: [50, 400]
+  radius_range: [3, 8]
+
+camera:
+  focal_length_range_mm: [25, 85]
+  # Camera distance is derived from the subject's real size and the focal length so
+  # the subject fills this fraction of the frame - see capture._framing_distance.
+  framing_fraction_range: [0.25, 0.80]
+  distance_limits_m: [0.25, 8.0]  # hard clamp on the derived distance
+  close_up_probability: 0.35      # chance of framing a single item instead of a cluster
+  cluster_radius_m: 1.0          # a view frames one item plus neighbours within this radius
+  min_object_frame_fraction: 0.06 # smallest item must span at least this much of the frame
+  elevation_range_deg: [15, 80]
+  inplane_rotation_range_deg: [-8, 8]
+  aim_jitter_frac: 0.25           # off-centre framing, as a fraction of subject size
+  min_height_above_poi: 0.15      # keep the camera out of the dirt; null disables
+  min_obstacle_distance: null     # nothing to clip into on a bare plane
+  min_visible_targets: 1          # reject poses where the ray grid finds no trash
+  check_rays: 20                  # sqrt of the ray grid used by the validity checks
+  max_pose_attempts: 60
+
+physics:
+  # No collider settings here: on the bare plane the visible ground slab is itself the
+  # passive rigid body. config_scene.yaml has the proxy-collider knobs.
+  ground_friction: 0.8
+  object_friction: 0.6
+  linear_damping: 0.06
+  angular_damping: 0.2
+  drop_height_range: [0.05, 0.30]   # metres above the zone surface
+  zone_inset_frac: 0.08           # keep drop points away from the zone edge
+  max_placement_tries: 500
+  min_simulation_time: 1.0
+  max_simulation_time: 6.0
+  check_object_interval: 0.5
+  substeps_per_frame: 20          # raised from the default 10; thin items tunnel at 10
+  solver_iters: 15
+  escape_tolerance_m: 1.0         # objects that end up further outside a zone are dropped
+
+annotations:
+  min_visible_pixels: 120         # drop annotations smaller than this after occlusion
+  drop_frames_without_targets: true
+  color_file_format: "PNG"
+  mask_encoding_format: "rle"     # "rle" or "polygon"
+  write_hdf5: false               # COCO is the primary output; hdf5 is extra

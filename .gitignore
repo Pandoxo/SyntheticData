@@ -1,0 +1,16 @@
+output/
+__pycache__/
+*.pyc
+.venv/
+
+# Blender backup files
+*.blend1
+
+# Pictures / HDRIs (kept local only)
+*.exr
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+*.hdr
