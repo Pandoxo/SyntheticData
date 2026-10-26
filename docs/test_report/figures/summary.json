@@ -1,0 +1,182 @@
+{
+ "machine": {
+  "host": "brev-jtyaqtaga",
+  "gpus": 4,
+  "gpu_model": "NVIDIA RTX 6000 Ada Generation",
+  "jobs_per_gpu": 2
+ },
+ "price_per_hour": 4.66,
+ "scenes": 96,
+ "images": 1091,
+ "frames_rendered": 1109,
+ "kept_fraction": 0.984,
+ "annotations": 2094,
+ "elapsed_h": 0.295,
+ "images_per_hour_node": 3698.3,
+ "images_per_hour_per_gpu": 924.6,
+ "cost_per_1000_images": 1.26,
+ "scene_wall_s": {
+  "10": 26.4,
+  "50": 43.6,
+  "90": 110.4,
+  "99": 362.2
+ },
+ "peak_rss_gb": {
+  "50": 5.21,
+  "90": 6.93,
+  "100": 9.79
+ },
+ "stage_mean_s": {
+  "init": 0.8,
+  "environment": 13.53,
+  "litter + physics": 2.33,
+  "clutter": 6.4,
+  "cameras": 3.73,
+  "grass": 0.02,
+  "render": 36.34,
+  "write": 1.89
+ },
+ "by_env": {
+  "procedural": {
+   "scenes": 74,
+   "wall_s_median": 45.1,
+   "rss_max_gb": 8.15
+  },
+  "scene": {
+   "scenes": 22,
+   "wall_s_median": 32.1,
+   "rss_max_gb": 9.79
+  }
+ },
+ "rigs": {
+  "robot": 447,
+  "arm": 320,
+  "general": 324
+ },
+ "biome_wall_s_median": {
+  "factory.blend": 329.3,
+  "forest": 111.9,
+  "forest.blend": 78.9,
+  "forest_2.blend": 29.8,
+  "gravel": 68.3,
+  "home.blend": 23.1,
+  "lawn": 74.4,
+  "park_path": 66.1,
+  "plaza": 33.0,
+  "sidewalk": 41.5,
+  "street": 35.8,
+  "studio": 33.1
+ },
+ "gpu_util_mean_pct": 12.1,
+ "gpu_mem_peak_mib": 13019,
+ "gpu_mem_total_mib": 49140,
+ "host_ram_peak_gib": 53.4,
+ "host_ram_total_gib": 283.4,
+ "host_load_mean": 43.6,
+ "projection": {
+  "10000": {
+   "1": {
+    "hours": 10.82,
+    "cost": 13.0
+   },
+   "2": {
+    "hours": 5.41,
+    "cost": 13.0
+   },
+   "4": {
+    "hours": 2.7,
+    "cost": 13.0
+   },
+   "8": {
+    "hours": 1.35,
+    "cost": 13.0
+   },
+   "16": {
+    "hours": 0.68,
+    "cost": 13.0
+   },
+   "32": {
+    "hours": 0.34,
+    "cost": 13.0
+   }
+  },
+  "50000": {
+   "1": {
+    "hours": 54.08,
+    "cost": 63.0
+   },
+   "2": {
+    "hours": 27.04,
+    "cost": 63.0
+   },
+   "4": {
+    "hours": 13.52,
+    "cost": 63.0
+   },
+   "8": {
+    "hours": 6.76,
+    "cost": 63.0
+   },
+   "16": {
+    "hours": 3.38,
+    "cost": 63.0
+   },
+   "32": {
+    "hours": 1.69,
+    "cost": 63.0
+   }
+  },
+  "100000": {
+   "1": {
+    "hours": 108.16,
+    "cost": 126.0
+   },
+   "2": {
+    "hours": 54.08,
+    "cost": 126.0
+   },
+   "4": {
+    "hours": 27.04,
+    "cost": 126.0
+   },
+   "8": {
+    "hours": 13.52,
+    "cost": 126.0
+   },
+   "16": {
+    "hours": 6.76,
+    "cost": 126.0
+   },
+   "32": {
+    "hours": 3.38,
+    "cost": 126.0
+   }
+  },
+  "250000": {
+   "1": {
+    "hours": 270.39,
+    "cost": 315.0
+   },
+   "2": {
+    "hours": 135.2,
+    "cost": 315.0
+   },
+   "4": {
+    "hours": 67.6,
+    "cost": 315.0
+   },
+   "8": {
+    "hours": 33.8,
+    "cost": 315.0
+   },
+   "16": {
+    "hours": 16.9,
+    "cost": 315.0
+   },
+   "32": {
+    "hours": 8.45,
+    "cost": 315.0
+   }
+  }
+ }
+}

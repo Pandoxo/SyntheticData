@@ -378,7 +378,13 @@ brev delete trash-1                           # stop paying
 | `pull.sh <inst>…` | locally | rsyncs `scene_*` back and merges |
 
 `render.sh` resumes: rerun the same `launch.sh` after an interruption and only the
-missing scenes are rendered. Measured throughput and cost per GPU count are in the
+missing scenes are rendered.
+
+**Sizing a run** (from the test report): throughput is set by CPU cores, not GPUs —
+about 85 images/h per busy core, GPUs sit at 10–30% load. Budget ~6 cores, ~8 GB RAM
+and ~4 GB VRAM per Blender job, pick instances with many vCPUs per GPU, and set
+`--jobs-per-gpu` to roughly `vCPUs / (6 × GPUs)`. On 4× RTX 6000 Ada with 2 jobs per
+GPU the measured cost was $1.26 per 1000 images. Measured throughput and cost per GPU count are in the
 [test report](docs/test_report/report.pdf); `benchmark_report.py` recomputes them
 from any run.
 

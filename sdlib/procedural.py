@@ -255,6 +255,18 @@ class ProceduralWorld:
             environment.prepare_zone(zone)
             zones.append(zone)
 
+        if not zones:
+            # Every draw landed on a strip too narrow inside the focus area (a curb, a
+            # thin verge). Fall back to the widest spawn strip rather than fail.
+            strip = max((s for s in self.strips if s.spawn > 0), key=lambda s: min(s.x1, focus_half) - max(s.x0, -focus_half))
+            x0, x1 = max(strip.x0, -focus_half), min(strip.x1, focus_half)
+            zone = bproc.object.create_primitive("PLANE")
+            zone.set_name(f"spawn_{strip.name}_fallback")
+            zone.set_scale([max(x1 - x0, 0.3) / 2.0, focus_half / 2.0, 1.0])
+            zone.set_location([(x0 + x1) / 2.0, 0.0, strip.top])
+            environment.prepare_zone(zone)
+            zones.append(zone)
+
         colliders = [s.obj for s in self.strips]
         self.meta = {"biome": self.biome, "strips": [s.to_dict() for s in self.strips],
                      "facades": [{"side": s, "x": round(x, 3)} for s, x in facades],
