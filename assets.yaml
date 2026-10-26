@@ -23,25 +23,19 @@
 # COCO box spanning every part. See that directory's README.
 
 classes:            # category_id 0 is reserved for background / scene geometry
-  can: 1
-  bottle: 2
-  cup: 3
-  bag: 4
-  paper: 5
-  cigarette: 6
-  box: 7
-  wrapper: 8
-  book: 9
-  food: 10
-  tableware: 11
-  knife: 12
-  tool: 13
-  toy: 14
-  electronics: 15
-  container: 16
-  styrofoam: 17
-  stationery: 18
-  accessory: 19
+  # Ten material-based classes, chosen to line up with TACO's supercategories so real
+  # TACO photos can validate a model trained on these renders. What a pick-up robot
+  # needs to know is mostly "is this litter, and roughly what is it made of".
+  bottle_plastic: 1   # PET bottles, detergent / cleaner bottles, jugs
+  bottle_glass: 2     # glass and ceramic bottles, jars
+  can: 3              # drink cans, food tins, aerosols - anything metal and can-shaped
+  paper: 4            # paper, cardboard, cartons, paper bags, paper packs
+  cup: 5              # disposable cups (paper, plastic, foam), with or without lids
+  plastic_film: 6     # bags, wrappers, chip bags, sachets, foil
+  cigarette: 7        # butts and whole cigarettes
+  container: 8        # tubs, takeaway boxes, styrofoam, tubes, buckets
+  small_item: 9       # caps, lids, straws, pens, matches, nails - under ~5 cm or thin
+  other: 10           # everything else people drop: tools, toys, books, food, cutlery
 
 defaults:
   collision_shape: CONVEX_HULL   # right for rigid, roughly convex items
@@ -59,6 +53,12 @@ ignore:
   # a large ground plane with a tiny prop sitting on it (the plane is what would get
   # annotated), the third is an unidentifiable scrap of a test scan.
   - /giggle_pacifier/
+  # A 200 l drum is not litter a small robot picks up, and at 0.88 m it fills the
+  # frame of every close camera - it was behind most of the all-black renders.
+  - /dirty_plastic_drum_uiujbcxva_high/
+  # Renders with a long thin sliver attached (a string?) that ends up in its mask
+  # and stretches its box across half the frame.
+  - /perfume_bottle_02/
   - /covid_19_oral_vaccine_inhaler_prototype/
   - /controller_3d_scan_test/
 
@@ -89,98 +89,98 @@ assets:
 
   # ---- bottles ------------------------------------------------------------
   - match: /water_bottle_free/
-    class: bottle
+    class: bottle_plastic
     longest_m: 0.230          # 500 ml PET bottle
   - match: /water_bottle_free(1)/
-    class: bottle
+    class: bottle_plastic
     longest_m: 0.230
   - match: /water_canteen/
-    class: bottle
+    class: other
     longest_m: 0.250
   - match: /glass_bottle/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.280
   - match: /glassbottle/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.300
   - match: /glass_bottle_freepolyorg/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.220
   - match: /glass_bottle_freepolyorg(1)/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.200
   - match: /glass_carafe_flagon_with_cork/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.280
   - match: /old_ceramic_bottle_tjuhabova_high/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.260
   - match: /old_ceramic_bottle_uekideyva_high/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.240
   - match: /healing_potion/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.180
   - match: /bleach_bottle/
-    class: bottle
+    class: bottle_plastic
     longest_m: 0.300          # household jug with a handle
   - match: /dusty_paint_stripper_bottle/
-    class: bottle
+    class: bottle_plastic
     longest_m: 0.250
   - match: /old_soap_bottle/
-    class: bottle
+    class: bottle_plastic
     longest_m: 0.200
   - match: /shampoo_bottle/
-    class: bottle
+    class: bottle_plastic
     longest_m: 0.220
   - match: /cc0_spray_cleaner_siffie/
-    class: bottle
+    class: bottle_plastic
     longest_m: 0.260          # trigger spray bottle
   - match: /cc0_cream_tube/
-    class: bottle
+    class: container
     longest_m: 0.150
   - match: /cc0_milk_carton/
-    class: bottle
+    class: paper
     longest_m: 0.240          # 1 l carton
   - match: /baby_food/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.120
   - match: /perfume_bottle/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.120
   - match: /perfume_bottle_02/
-    class: bottle
+    class: bottle_glass
     longest_m: 0.150
   - match: /fbx/
-    class: bottle
+    class: bottle_plastic
     longest_m: 0.250          # CHECK: filename says nothing - it is a milk-style bottle
 
   # ---- cups and tubs ------------------------------------------------------
   - match: /yogurt/
-    class: cup
+    class: container
     longest_m: 0.120
   - match: /cc0_potato_chips_tube_2/
-    class: cup
+    class: container
     longest_m: 0.230          # Pringles-style tube
   - match: /cc0_potato_chips_tube_2_open/
-    class: cup
+    class: container
     longest_m: 0.260          # CHECK: tube plus its detached lid - the box spans both
 
   # ---- bags ---------------------------------------------------------------
   - match: /grocery_bag/
-    class: bag
+    class: plastic_film
     longest_m: 0.450
     scale_jitter: 0.15        # bags vary far more in size than a canned drink
   - match: /cat_food_bag/
-    class: bag
+    class: plastic_film
     longest_m: 0.350
     scale_jitter: 0.15
   - match: /paper_bag_sack_lunch/
-    class: bag
+    class: paper
     longest_m: 0.300
     scale_jitter: 0.15
   - match: /paper_bag_scan_medpoly/
-    class: bag
+    class: paper
     longest_m: 0.350
     scale_jitter: 0.15
 
@@ -221,243 +221,243 @@ assets:
 
   # ---- boxes --------------------------------------------------------------
   - match: /cardboard_box_vgyidauaw_high/
-    class: box
+    class: paper
     longest_m: 0.450
   - match: /cardboard_box_vicifcy_high/
-    class: box
+    class: paper
     longest_m: 0.400
   - match: /cc0_match_box/
-    class: box
+    class: paper
     longest_m: 0.055
 
   # ---- wrappers -----------------------------------------------------------
   - match: /cheez_it_baked_snack_crackers_v2/
-    class: wrapper
+    class: plastic_film
     longest_m: 0.250
     scale_jitter: 0.15
   - match: /pc_zingerz_chocolate_bar/
-    class: wrapper
+    class: plastic_film
     longest_m: 0.180
   - match: /potion/
-    class: wrapper
+    class: plastic_film
     longest_m: 0.120          # flat sachet despite the name
 
   # ---- books --------------------------------------------------------------
   - match: /antique_old_book/
-    class: book
+    class: other
     longest_m: 0.240
   - match: /book_wldodgk_high/
-    class: book
+    class: other
     longest_m: 0.240
   - match: /leather_book/
-    class: book
+    class: other
     longest_m: 0.260
   - match: /old_book_freepolyorg/
-    class: book
+    class: other
     longest_m: 0.250
   - match: /old_book_in_photogrammetry/
-    class: book
+    class: other
     longest_m: 0.240
   - match: /old_book_wldocam_high/
-    class: book
+    class: other
     longest_m: 0.230
   - match: /vintage_book/
-    class: book
+    class: other
     longest_m: 0.240
 
   # ---- food ---------------------------------------------------------------
   - match: /baguette/
-    class: food
+    class: other
     longest_m: 0.600
   - match: /baguette_bread_ujqhebs_high/
-    class: food
+    class: other
     longest_m: 0.600
   - match: /cc0_baguette/
-    class: food
+    class: other
     longest_m: 0.550
   - match: /carrot_ub2lehrjw_high/
-    class: food
+    class: other
     longest_m: 0.200
   - match: /ripe_banana_photoscan_lowpoly/
-    class: food
+    class: other
     longest_m: 0.200
   - match: /rottenpear3fbx/
-    class: food
+    class: other
     longest_m: 0.140
   - match: /toon_hamburger/
-    class: food
+    class: other
     longest_m: 0.120
   - match: /chocolate_bar/
-    class: food
+    class: plastic_film
     longest_m: 0.160          # part-unwrapped bar
 
   # ---- tableware ----------------------------------------------------------
   - match: /breakfast_food_dish/
-    class: tableware
+    class: other
     longest_m: 0.280          # plate with food modelled onto it
   - match: /cake_plate_by_zakdesigns/
-    class: tableware
+    class: other
     longest_m: 0.300
   - match: /hakusan_plate_likely_meiji_19th_c/
-    class: tableware
+    class: other
     longest_m: 0.220
   - match: /porcelain_charger_retopologized/
-    class: tableware
+    class: other
     longest_m: 0.320
   - match: /terracotta_plate/
-    class: tableware
+    class: other
     longest_m: 0.260
   - match: /wood_plate_fbx/
-    class: tableware
+    class: other
     longest_m: 0.260
   - match: /realistic_bowl/
-    class: tableware
+    class: other
     longest_m: 0.200
   - match: /glass_ashtray/
-    class: tableware
+    class: other
     longest_m: 0.140
   - match: /scan_chinese_steamer_freepolyorg/
-    class: tableware
+    class: other
     longest_m: 0.400          # CHECK: basket plus its lid beside it - the box spans both
 
   # ---- knives -------------------------------------------------------------
   - match: /knife/
-    class: knife
+    class: other
     longest_m: 0.300
   - match: /knife(1)/
-    class: knife
+    class: other
     longest_m: 0.300
   - match: /kitchen_knife/
-    class: knife
+    class: other
     longest_m: 0.300
   - match: /combat_knife/
-    class: knife
+    class: other
     longest_m: 0.300
   - match: /cyberpunk_knife/
-    class: knife
+    class: other
     longest_m: 0.280
   - match: /free_karambit_knife/
-    class: knife
+    class: other
     longest_m: 0.220
   - match: /old_knife/
-    class: knife
+    class: other
     longest_m: 0.250
   - match: /pocket_knife/
-    class: knife
+    class: other
     longest_m: 0.110          # folded
   - match: /tactical_knife/
-    class: knife
+    class: other
     longest_m: 0.250
   - match: /tactical_knife(1)/
-    class: knife
+    class: other
     longest_m: 0.250
   - match: /throwing_knife/
-    class: knife
+    class: other
     longest_m: 0.250
 
   # ---- tools --------------------------------------------------------------
   - match: /wrench/
-    class: tool
+    class: other
     longest_m: 0.250
   - match: /old_wrench_medpoly/
-    class: tool
+    class: other
     longest_m: 0.250
   - match: /rusty_wrench_wlklda1_high/
-    class: tool
+    class: other
     longest_m: 0.250
   - match: /screwdriver/
-    class: tool
+    class: other
     longest_m: 0.220
   - match: /screwdriver_rawscan/
-    class: tool
+    class: other
     longest_m: 0.220
   - match: /cc0_screwdriver/
-    class: tool
+    class: other
     longest_m: 0.200
   - match: /cc0_scissors/
-    class: tool
+    class: other
     longest_m: 0.200
   - match: /monolithic_plastic_forceps_for_the_hobbyist/
-    class: tool
+    class: other
     longest_m: 0.140
   - match: /spatula/
-    class: tool
+    class: other
     longest_m: 0.300
   - match: /metal_sprinker/
-    class: tool
+    class: other
     longest_m: 0.250
   - match: /small_rope_spool_villceo_high/
-    class: tool
+    class: other
     longest_m: 0.200
   - match: /painted_metal_cover_wcvocfe_high/
-    class: tool
+    class: other
     longest_m: 0.300
   - match: /annular_ring_nail/
-    class: tool
+    class: small_item
     longest_m: 0.065
     mass_kg: 0.01
   - match: /65mm_bi_blade_propeller/
-    class: tool
+    class: other
     longest_m: 0.065
     mass_kg: 0.005
   - match: /syringe_prop/
-    class: tool
+    class: other
     longest_m: 0.150
   - match: /vintage_medieval_medical_syringe_fbx/
-    class: tool
+    class: other
     longest_m: 0.200
 
   # ---- toys ---------------------------------------------------------------
   - match: /beach_ball_fbx/
-    class: toy
+    class: other
     longest_m: 0.300
   - match: /rubber_duck/
-    class: toy
+    class: other
     longest_m: 0.100
   - match: /rubix_cube/
-    class: toy
+    class: other
     longest_m: 0.057
   - match: /dice/
-    class: toy
+    class: other
     longest_m: 0.016
     mass_kg: 0.005
   - match: /cow_toy_made_out_of_wood/
-    class: toy
+    class: other
     longest_m: 0.150
   - match: /wooden_toy_horse/
-    class: toy
+    class: other
     longest_m: 0.180
   - match: /wooden_truck/
-    class: toy
+    class: other
     longest_m: 0.200
   - match: /wood_tractor/
-    class: toy
+    class: other
     longest_m: 0.180
   - match: /paper_kitten_figurine/
-    class: toy
+    class: other
     longest_m: 0.120
   - match: /spin_v_pack/
-    class: toy
+    class: other
     longest_m: 0.080          # hand spinner
   - match: /darda_loop/
-    class: toy
+    class: other
     longest_m: 0.150          # piece of toy car track
 
   # ---- electronics --------------------------------------------------------
   - match: /phone/
-    class: electronics
+    class: other
     longest_m: 0.120          # candybar handset
   - match: /earphone_3d_model/
-    class: electronics
+    class: other
     longest_m: 0.200
   - match: /usb_export/
-    class: electronics
+    class: other
     longest_m: 0.060
   - match: /low_poly_vhs_tape_free_3d_model/
-    class: electronics
+    class: other
     longest_m: 0.190
   - match: /cc0_light_bulb/
-    class: electronics
+    class: other
     longest_m: 0.110
 
   # ---- open containers ----------------------------------------------------
@@ -468,7 +468,7 @@ assets:
     class: container
     longest_m: 0.880          # 200 l drum
   - match: /old_oilcan/
-    class: container
+    class: can
     longest_m: 0.200
   - match: /tennis_balls_in_container/
     class: container
@@ -476,65 +476,65 @@ assets:
 
   # ---- styrofoam ----------------------------------------------------------
   - match: /dirty_styrofoam_ucmjdfkhw_high/
-    class: styrofoam
+    class: container
     longest_m: 0.400
     scale_jitter: 0.15
   - match: /dirty_styrofoam_ucmjdfkhw_low/
-    class: styrofoam
+    class: container
     longest_m: 0.400
     scale_jitter: 0.15
   - match: /dirty_styrofoam_ucykcdahw_high/
-    class: styrofoam
+    class: container
     longest_m: 0.300
     scale_jitter: 0.15
   - match: /dirty_styrofoam_udgkcewhw_high/
-    class: styrofoam
+    class: container
     longest_m: 0.300
     scale_jitter: 0.15
   - match: /dirty_styrofoam_udjkfdfhw_high/
-    class: styrofoam
+    class: container
     longest_m: 0.350
     scale_jitter: 0.15
 
   # ---- stationery ---------------------------------------------------------
   - match: /ball_pen/
-    class: stationery
+    class: small_item
     longest_m: 0.145
   - match: /marker_pen/
-    class: stationery
+    class: small_item
     longest_m: 0.140
   - match: /pen_free_download/
-    class: stationery
+    class: small_item
     longest_m: 0.145
   - match: /cc0_ruler_2/
-    class: stationery
+    class: other
     longest_m: 0.300
   - match: /cc0_magnet_card/
-    class: stationery
+    class: small_item
     longest_m: 0.086          # ID-1 card
   - match: /cc0_match/
-    class: stationery
+    class: small_item
     longest_m: 0.045
     mass_kg: 0.001
   - match: /cc0_pin_2/
-    class: stationery
+    class: small_item
     longest_m: 0.030
     mass_kg: 0.001
   - match: /cc0_plectrum/
-    class: stationery
+    class: small_item
     longest_m: 0.030
     mass_kg: 0.001
   - match: /cc0_rubber_band/
-    class: stationery
+    class: small_item
     longest_m: 0.080
     mass_kg: 0.001
 
   # ---- accessories --------------------------------------------------------
   - match: /black_sunglasses/
-    class: accessory
+    class: other
     longest_m: 0.145
   - match: /fbx(2)/
-    class: accessory
+    class: other
     longest_m: 0.145          # sunglasses
 
   # ---- BlenderKit models (~/blenderkit_data/models) -----------------------
@@ -552,13 +552,13 @@ assets:
     longest_m: 0.134          # 250 ml slim can
 
   - match: evian-water-bott
-    class: bottle
+    class: bottle_plastic
     longest_m: 0.230          # 500 ml PET bottle
   - match: heineken-beer-60
-    class: bottle
+    class: bottle_glass
     longest_m: 0.280          # 600 ml glass bottle
   - match: beer_
-    class: bottle
+    class: bottle_glass
     longest_m: 0.250          # CHECK: filename says only "beer" - confirm it is a bottle
 
   - match: paper-coffee-cup
@@ -566,7 +566,7 @@ assets:
     longest_m: 0.140
 
   - match: bag-scan
-    class: bag
+    class: plastic_film
     longest_m: 0.350
     scale_jitter: 0.15
 

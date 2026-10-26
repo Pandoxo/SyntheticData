@@ -1,432 +1,488 @@
-# Synthetic trash dataset
+# Synthetic litter dataset for a trash-collecting robot
 
-Renders COCO-annotated images of litter using BlenderProc: trash models are dropped
-with physics into marked areas, photographed under randomised HDRIs, focal lengths and
-camera poses, and written out with instance masks and bounding boxes.
+## Overview — read this first
 
-Two variants share the same pipeline:
+We are building a small robot that drives along sidewalks, streets, lawns and park
+paths, spots litter with a camera mounted **about 10 cm above the ground**, and picks
+it up with a robotic arm that has a second camera of its own. The robot needs a
+small, fast neural network that finds and outlines every piece of trash in the image
+(*instance segmentation*): bottles, cans, cardboard, cups, wrappers, cigarette
+butts and so on.
 
-| | script | config | environment |
-|---|---|---|---|
-| plane | `generate.py` | `config.yaml` | a bare ground slab — fast, for checking assets and labels |
-| scene | `generate_scene.py` | `config_scene.yaml` | a real `.blend` environment with marked spawn zones |
+Training such a network needs tens or hundreds of thousands of labelled photos taken
+from exactly those unusual viewpoints. Photographing and hand-labelling that many is
+not realistic, so this repository **generates the photos instead**: it builds small
+3D worlds in Blender, drops 3D models of litter into them with real physics, and
+renders pictures from the robot's point of view — together with perfect labels,
+because in a synthetic world we know exactly which pixel belongs to which object.
+
+Every rendered picture comes with
+
+* the **colour image** (what the camera sees),
+* a **depth map** (distance of every pixel, in millimetres),
+* an **instance mask** (which pixels belong to which piece of trash),
+* a **semantic mask** (which class every pixel belongs to),
+* **COCO annotations** (boxes + masks, the standard format), convertible to
+  **YOLO** for training,
+* and a record of every random choice that produced it (scene, lights, camera,
+  models, licences).
+
+The worlds are deliberately varied, because a network only learns what it has seen:
+
+* **10 classes of litter** from ~1000 3D models (scanned and modelled), randomly
+  crushed, bent, dirtied and half-buried;
+* **8 kinds of places** — sidewalk, street gutter, lawn, park path, forest floor,
+  gravel, plaza, plain ground — built from hundreds of photo-scanned ground
+  materials, with real 3D grass, weeds, stones, bins, hydrants, lamps, trees and
+  building walls; plus corners of a few hand-made 3D scenes;
+* **hundreds of real sky/lighting captures** (sun, overcast, dusk, night with street
+  lights) and shadows of trees or buildings that are outside the picture;
+* **three cameras**: the robot's own low front camera (40% of images), the arm
+  camera looking down at an item (30%), and a person-height camera (30%) for extra
+  variety — each with randomised lens, height and tilt.
+
+Rendering runs on rented NVIDIA GPUs (NVIDIA Brev); results go straight to Google
+Drive. A pipeline test on 4× RTX 6000 Ada is summarised in
+[`docs/test_report/report.pdf`](docs/test_report/report.pdf) — render time, memory and
+cost per number of GPUs.
+
+**Where it stands:** the generator, the asset downloaders, the render-farm scripts
+and the QA tools work end to end. What is still open is listed under
+[Known issues and next steps](#known-issues-and-next-steps) — most importantly,
+validating on *real* photos from the robot's camera, which is the only test that
+counts.
+
+---
+
+## Contents
+
+- [Quick start](#quick-start)
+- [How a scene is made](#how-a-scene-is-made)
+- [Repository layout](#repository-layout)
+- [Configuration](#configuration)
+- [Assets: where every model and texture comes from](#assets-where-every-model-and-texture-comes-from)
+- [The litter catalogue](#the-litter-catalogue)
+- [Output format](#output-format)
+- [Checking the data](#checking-the-data)
+- [Rendering at scale on NVIDIA Brev](#rendering-at-scale-on-nvidia-brev)
+- [Google Drive](#google-drive)
+- [Training data export](#training-data-export)
+- [Known issues and next steps](#known-issues-and-next-steps)
+- [Implementation notes (gotchas)](#implementation-notes-gotchas)
+- [Licences](#licences)
+
+---
 
 ## Quick start
 
-```bash
-# 1. Check the asset catalogue: native sizes and the scale factor each implies.
-.venv/bin/blenderproc run inspect_blend.py -- --assets
+Everything that touches Blender runs through [BlenderProc](https://github.com/DLR-RM/BlenderProc)
+2.8, which downloads and drives its own Blender **4.2.1** (it cannot open files saved
+by Blender 5).
 
-# 2. Render one scene on the bare plane and look at the result.
+```bash
+# 0. Python environment (once)
+python3 -m venv .venv
+.venv/bin/pip install -r brev/requirements.txt
+
+# 1. Download the environment assets (ground materials, HDRIs, plants, props).
+#    `dev` is ~2 GB of small textures for a laptop; `full` (~30 GB) is for render nodes.
+.venv/bin/python fetch_assets.py --profile dev
+
+# 2. (optional) Download litter models from Objaverse - ~800 more models.
+.venv/bin/python fetch_objaverse.py --max-per-class 150
+
+# 3. Render one scene and look at it.
 .venv/bin/blenderproc run generate.py -- --config config.yaml --scene-index 0
-cd output/plane/scene_00000 && ../../../.venv/bin/blenderproc vis coco -i 0 -c coco_annotations.json -b .
+.venv/bin/python qa_report.py output/robot_v1/scene_00000
 
-# 3. Render a dataset: one Blender process per scene, in parallel, then merge.
-.venv/bin/python run_batch.py --config config.yaml --jobs 4 --quiet
+# 4. Render a dataset on this machine: one Blender process per scene, then merge.
+.venv/bin/python run_batch.py --config config.yaml --scenes 50 --jobs 2 --quiet
 ```
 
-Output lands in `output/<name>/scene_XXXXX/` (images, per-scene `coco_annotations.json`,
-`scene_meta.json` with the HDRI/lights/camera parameters used), plus a merged
-`output/<name>/coco_annotations.json` covering the whole dataset.
-
-Every flag is spelled out under [Running the scripts](#running-the-scripts); splitting a
-big run across GPUs or machines is under
-[Rendering on several machines or GPUs](#rendering-on-several-machines-or-gpus).
-
-## Running the scripts
-
-Everything that touches Blender is launched through `blenderproc run`, which re-executes
-the script inside Blender's own Python:
+Useful while developing:
 
 ```bash
-.venv/bin/blenderproc run [blenderproc flags] <script.py> -- [script flags]
+# force a world type / biome
+.venv/bin/blenderproc run generate.py -- --scene-index 3 --env procedural --biome lawn
+.venv/bin/blenderproc run generate.py -- --scene-index 3 --env scene
+# thumbnails of every catalogue model, to catch wrong classes/sizes/textures
+.venv/bin/blenderproc run catalog_sheet.py -- --out qa/catalog
 ```
 
-The bare `--` marks where BlenderProc's own flags stop and the script's begin.
-BlenderProc forwards anything it does not recognise to the script, so leaving `--` out
-usually still works — but a flag it *does* recognise (`--temp-dir`,
-`--custom-blender-path`, `--keep-temp-dir`, …) is consumed before the script ever sees
-it. Keep the separator.
+The bare `--` separates BlenderProc's own flags from the script's. Keep it: a flag
+BlenderProc recognises (`--temp-dir`, `--custom-blender-path`, …) is otherwise
+consumed before the script sees it. Paths in the configs are resolved against the
+project root, so commands work from any directory.
 
-`run_batch.py` is the exception — it runs under the venv's plain Python and spawns
-`blenderproc run` itself, once per scene.
+---
 
-Paths inside the YAML configs are resolved against the project root, not the working
-directory, so the commands below work from anywhere. `~` is expanded.
+## How a scene is made
 
-### `generate.py` / `generate_scene.py` — render one scene
+One scene = one Blender process = one random world photographed from 12 viewpoints.
+The scene index is also the random seed: the same index always rebuilds the same scene,
+which is what lets many machines render disjoint index ranges with no coordination.
 
-```bash
-.venv/bin/blenderproc run generate.py -- --config config.yaml --scene-index 0
-.venv/bin/blenderproc run generate_scene.py -- --config config_scene.yaml --scene-index 3
-```
+`sdlib/pipeline.py` runs these stages in this order:
 
-| flag | default | meaning |
+| stage | what happens | code |
 |---|---|---|
-| `--config PATH` | `config.yaml` (`config_scene.yaml` for the scene variant) | which YAML to read; everything randomised lives there |
-| `--scene-index N` | `0` | which scene to render. Also **drives the seed** — `seed = config seed + N`, so the same index always rebuilds the same scene |
-| `--output-dir DIR` | `<output_dir>/scene_<N:05d>` | where this scene's images, `coco_annotations.json` and `scene_meta.json` go |
-| `--debug` | off | listen for a `debugpy` client on port 5678 and block until one attaches |
+| environment | pick a world type: a **procedural** patch of ground (80%) or a corner of a real `.blend` **scene** (20%) | `procedural.py`, `scenes.py` |
+| lighting | random HDRI (sky + light), random rotation and strength; street lights at night | `environment.py` |
+| litter | draw 3–9 models (class-balanced), scale to real size, maybe crush/bend/flatten, maybe add dirt; drop them with rigid-body physics | `assets.py`, `realism.py` |
+| after physics | half-bury items in soft ground, scatter stones/weeds/branches around them, maybe a shadow-casting canopy | `procedural.py`, `scatter.py` |
+| cameras | 12 viewpoints, each from one of three rigs, validated by ray casts (target visible, camera not inside geometry) | `cameras.py` |
+| after cameras | grow 3D grass, kept clear of the litter and of where the robot stands | `procedural.py` |
+| render | Cycles, OptiX denoising; colour + depth + segmentation | `capture.py` |
+| write | drop barely-visible annotations, write images, masks, depth, COCO, metadata | `capture.py` |
 
-A scene can legitimately produce nothing and still exit 0: if every object bounces out
-of its spawn zone, or no camera pose passes validation, the script logs the reason and
-skips the render.
+### Procedural worlds (`sdlib/procedural.py`)
 
-### `run_batch.py` — render a dataset
+The problem they solve: a camera 10 cm above a flat textured plane sees one texture
+repeating to the horizon and nothing else. So each world is assembled from parts:
 
-```bash
-.venv/bin/python run_batch.py --config config.yaml --jobs 4 --quiet
-.venv/bin/python run_batch.py --config config_scene.yaml --script generate_scene.py --jobs 2
-```
+* **Layout** — parallel strips of ground, each a solid box with its own PBR material:
+  `building | verge | sidewalk | curb | road | curb | sidewalk | building` for urban
+  biomes, `lawn | path | lawn` for parks, a single surface for forest/gravel/plaza.
+  The strips are also the physics floor; the gutter along the curb is a spawn zone.
+* **Materials** — chosen by keyword from ~800 photo-scanned ground textures (asphalt,
+  paving, cobbles, grass, soil, gravel, leaves, …), mapped at real-world tile size,
+  with a low-frequency colour variation so a 2 m tile does not visibly repeat.
+* **Vegetation** — grass clumps instanced by geometry nodes (tens of thousands per
+  scene for the memory of one), mowed / normal / long.
+* **Clutter** — stones, weeds, dandelions, branches, roots near the litter. Never
+  annotated: these are the hard negatives that teach "a stone is not a bottle".
+* **Props** — bins, hydrants, lamps, benches, barriers, utility boxes, tyres, trees.
+* **Facades** — textured walls that fill the horizon in urban biomes.
 
-| flag | default | meaning |
-|---|---|---|
-| `--config PATH` | `config.yaml` | passed through to each scene process |
-| `--script NAME` | `generate.py` | `generate.py` (bare plane) or `generate_scene.py` (`.blend` environments) |
-| `--jobs N` | `1` | scenes rendered concurrently; each is a full Blender process |
-| `--scenes N` | `num_scenes` from the config | how many scenes to render |
-| `--start N` | `0` | first scene index — the sharding knob, see below |
-| `--resume` | off | skip scenes that already have a `coco_annotations.json` |
-| `--merge-only` | off | skip rendering; just merge the per-scene COCO files that already exist |
-| `--quiet` | off | capture Blender's output and print it only for scenes that failed |
+### Real scenes (`sdlib/scenes.py`)
 
-Each scene writes its own COCO file, which is what keeps parallel workers from racing
-each other; the merge step at the end renumbers image and annotation ids and rewrites
-`file_name` relative to the dataset root. Exit status is non-zero if any scene failed.
-
-### `inspect_blend.py` — check the catalogue or a scene
-
-```bash
-.venv/bin/blenderproc run inspect_blend.py -- --assets
-.venv/bin/blenderproc run inspect_blend.py -- --scene scenes/factory.blend
-```
-
-| flag | default | meaning |
-|---|---|---|
-| `--assets` | off | for every catalogued asset: class, mesh count, native bounding box, and the scale factor `longest_m` implies |
-| `--scene PATH` | — | list a scene's objects with their sizes and flag which ones are spawn zones |
-| `--config PATH` | `config_scene.yaml` | note the default differs from the generators — pass `--config config.yaml` to inspect the plane variant's catalogue |
-| `--pattern REGEX` | `scene.spawn_zone_pattern` | override what counts as a spawn zone |
-
-At least one of `--assets` / `--scene` is required.
-
-### `usdz_to_blend.py` — turn USD models into catalogue assets
+Downloaded `.blend` environments (`scenes/*.blend`). `prepare_scenes.py` finds flat,
+upward-facing ground automatically (plus any hand-made `spawn_*` planes) and records
+which objects lie within 25 m of each patch, in `<scene>.blend.zones.json`. The
+generator then loads only those objects — a 1.4 GB forest scene that needed 13 GB of
+RAM loaded whole now renders comfortably. Run it again after editing a scene:
 
 ```bash
-.venv/bin/blenderproc run usdz_to_blend.py -- --input ~/downloads/models --asset
-.venv/bin/blenderproc run usdz_to_blend.py -- --input can.usdz --asset --dry-run
+.venv/bin/blenderproc run prepare_scenes.py -- --config config.yaml
 ```
 
-| flag | default | meaning |
-|---|---|---|
-| `--input PATH…` | required | files and/or directories; directories are searched recursively for `--pattern` |
-| `--output-dir DIR` | `resources/objects` | already in `model_dirs`, so converted models are picked up automatically |
-| `--pattern GLOB` | `*.usdz` | used when `--input` names a directory; `'*.usd*'` sweeps every USD flavour |
-| `--asset` | off | **the flag for catalogue models** — shorthand for `--geometry-only --join --center` |
-| `--geometry-only` | off | drop cameras and lights, keep meshes and materials |
-| `--join` | off | join every mesh into one object, so a bottle's cap and label do not each get their own COCO box |
-| `--center` | off | origin at the bounding-box centre, model sat on the world origin |
-| `--scale F` | `1.0` | Blender ignores the stage's `metersPerUnit`, so a model authored in centimetres imports 100× too big — `--scale 0.01` fixes those. Irrelevant for catalogue assets, which `longest_m` rescales anyway |
-| `--flat` | off | write `<output-dir>/<name>.blend` instead of `<output-dir>/<name>/<name>.blend` (the layout `sdlib/assets.py` reads the asset name from) |
-| `--compress` | off | smaller on disk, slower to load |
-| `--overwrite` | off | reconvert inputs whose `.blend` already exists |
-| `--dry-run` | off | list what would be converted and where, then stop |
+### Cameras (`sdlib/cameras.py`)
 
-A bad model is reported and skipped rather than killing the batch; the exit status is
-non-zero if any file failed.
+| rig | share | height | tilt | horizontal FOV | notes |
+|---|---|---|---|---|---|
+| `robot` | 40% | 6–16 cm above the ground it stands on | 3° up … 28° down | 65–105° | target 0.25–4 m away (log-uniform), anywhere across the frame |
+| `arm` | 30% | 15–60 cm | 45–90° down | 60–90° | aimed at one item, any roll |
+| `general` | 30% | person height | 15–75° | 20–85 mm lens | the original "photographer" sampler |
 
-### Looking at the results
+6% of frames are deliberately aimed away from all litter (empty hard negatives).
+When the real robot's cameras are known, set their FOV ranges to match.
 
-```bash
-cd output/plane/scene_00000
-../../../.venv/bin/blenderproc vis coco -i 0 -c coco_annotations.json -b . --save
-```
+---
 
-`-i` picks the image index, `-c` the annotation file, `-b` the folder holding it and the
-images, `--save` writes `<base_path>/coco_annotated_<i>.png`. Be aware that the
-BlenderProc script calls `im.show()` unconditionally, `--save` or not: on a headless
-machine it writes the PNG and then hangs trying to open a viewer, so interrupt it once
-the file exists.
-
-The merged dataset-level file works too — its `file_name`s are relative to
-`output/<name>/`, so run it with `-b output/plane`.
-
-### BlenderProc's own flags
-
-These go **before** the `--`, and matter mostly when deploying to a machine you do not
-own:
-
-| flag | meaning |
-|---|---|
-| `--custom-blender-path PATH` | use an existing Blender install instead of BlenderProc's own. It must be Blender 4.2.x — 4.2.1 is what this project is verified against |
-| `--blender-install-path PATH` | where BlenderProc downloads Blender to. The default is `/home_local/<user>/blender`, which does not exist on most machines; it then falls back to `~/blender` and says so |
-| `--temp-dir DIR` | scratch space, default `/dev/shm` if present, else `/tmp`. Point it at a real disk on nodes with a small tmpfs |
-| `--keep-temp-dir` | leave the temp directory behind for debugging |
-| `--reinstall-blender` | delete and re-download Blender |
-
-### Other entry points
-
-`make_example_scene.py` takes no arguments and rebuilds `resources/example_scene.blend`.
-`quickstart.py` is a BlenderProc smoke test that blocks on `debugpy` port 5678 until a
-debugger attaches — it is not part of the dataset pipeline.
-
-## Rendering on several machines or GPUs
-
-The unit of work is the **scene index**. `seed = config seed + scene_index` drives every
-random choice in a scene, so an index is a complete, self-contained description of what
-to render: two workers given disjoint index ranges produce disjoint, non-overlapping
-scenes with no coordination, no shared state and no locking. Sharding is therefore just
-arithmetic on `--start` and `--scenes`.
-
-Measured cost of one scene on an RTX 3060 + Ryzen 5 2600, at this repo's defaults
-(640×640, 128 samples, 6 views): **22 s wall, 1.9 GB peak RSS, ~6 cores busy**. Scale
-those numbers to your own hardware before sizing a run — they are the budget per
-concurrent job, not per machine.
-
-### One machine
-
-```bash
-.venv/bin/python run_batch.py --config config.yaml --scenes 200 --jobs 4 --quiet
-```
-
-`--jobs` is bounded by RAM (~2 GB per job) and by VRAM if you render on the GPU. Note
-that BlenderProc renders on the GPU **and** the CPU by default — the log lines
-`Device … of type OPTIX found and used` and `Device … of type CPU found and used` say
-what it picked — so concurrent jobs contend for cores as well as for the GPU. The
-measurement above averaged ~6 busy cores over the whole 22 s (single-threaded while
-loading assets and simulating physics, all threads during the render), so on a 12-thread
-box 2–4 jobs saturate it and more mostly queue.
-
-### Several GPUs in one machine
-
-Cycles honours `CUDA_VISIBLE_DEVICES`, so pinning a worker to a GPU needs no code
-change. One `run_batch.py` per GPU, each with its own slice of the index space:
-
-```bash
-# 4 GPUs x 250 scenes = scenes 0..999
-for gpu in 0 1 2 3; do
-  CUDA_VISIBLE_DEVICES=$gpu .venv/bin/python run_batch.py \
-      --config config.yaml --start $((gpu * 250)) --scenes 250 --jobs 2 --quiet &
-done
-wait
-.venv/bin/python run_batch.py --config config.yaml --merge-only
-```
-
-Sanity-check the pinning in the log: a worker that sees no usable GPU prints
-`Using only the CPU for rendering` and quietly renders far slower rather than failing.
-
-The final `--merge-only` is deliberate — every worker's own merge pass at exit sees only
-the scenes it finished, so one merge after all of them have exited is what produces a
-complete dataset-level `coco_annotations.json`.
-
-### Several machines
-
-Give each machine a disjoint range, render to **local** disk, then collect and merge
-once:
-
-```bash
-# on each node: its own rank, 4 nodes x 250 scenes = scenes 0..999
-NODE=0
-.venv/bin/python run_batch.py --config config.yaml \
-    --start $((NODE * 250)) --scenes 250 --jobs 4 --quiet
-
-# on the collector, once every node is done
-rsync -a node1:/path/output/plane/  output/plane/
-rsync -a node2:/path/output/plane/  output/plane/
-rsync -a node3:/path/output/plane/  output/plane/
-.venv/bin/python run_batch.py --config config.yaml --merge-only
-```
-
-`scene_XXXXX` directory names carry the index, so shards from different machines drop
-into one tree without collisions as long as their ranges do not overlap. Rendering
-straight onto a network share works but is usually the bottleneck — each scene writes
-its PNGs, masks and JSON at the end of a 20-second job.
-
-Under Slurm the same shape becomes an array job, one task per index block:
-
-```bash
-#!/bin/bash
-#SBATCH --array=0-9
-#SBATCH --gpus=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=16G
-PER_TASK=100
-.venv/bin/python run_batch.py --config config.yaml \
-    --start $((SLURM_ARRAY_TASK_ID * PER_TASK)) --scenes $PER_TASK --jobs 2 --quiet
-```
-
-### What every node needs
-
-A node renders from local files only; nothing is fetched at run time. Each one needs the
-repo and a venv holding `blenderproc` (2.8.0 here), `pyyaml` and `numpy` — the driver
-scripts import nothing else outside Blender — plus:
-
-| resource | where it comes from | if it is missing |
-|---|---|---|
-| Blender 4.2.1 | downloaded by BlenderProc on first run, or `--custom-blender-path` | first run on each node pays the download; pre-seed it in the image |
-| every directory in `objects.model_dirs` | `resources/objects` is in the repo; `~/blenderkit_data/models` is not | **hard failure** — `FileNotFoundError` before anything renders |
-| every directory in `hdri.folders` | `resources/haven/hdris` is in the repo; `~/blenderkit_data/hdrs` is not | only a warning, and the run continues with whatever it found |
-
-That last asymmetry is the one to watch on a cluster: the HDRI is picked by index from
-the sorted list of files found, so a node with a different set of HDRIs renders the same
-scene index under a **different sky**. Sync the HDRI folders, or trim `hdri.folders` to
-the ones that live in the repo, before splitting a run across machines.
-
-### Reproducibility and reruns
-
-Same index + same config + same assets + same BlenderProc/Blender version ⇒ same scene:
-same models, same drop physics, same camera poses, same HDRI. Pixels can still differ
-slightly between unlike GPUs, since the denoiser and Cycles' device backends are not
-bit-identical; the annotations are unaffected.
-
-Reruns are cheap to make safe. `--resume` skips any scene that already has a
-`coco_annotations.json`, so a node that died halfway through can be restarted with the
-same command:
-
-```bash
-.venv/bin/python run_batch.py --config config.yaml --start 250 --scenes 250 --resume --quiet
-```
-
-Failed scenes are listed at the end of the run with their exit codes, and `run_batch.py`
-itself exits non-zero if any scene failed — enough for a scheduler to retry the task.
-
-## Using your own scenes
-
-BlenderProc ships no scenes of its own — only loaders for datasets you download
-separately, all of which are indoor. Outdoor `.blend` environments (BlenderKit or your
-own) are loaded directly instead.
-
-To mark where trash may appear:
-
-1. Open the scene `.blend` in Blender.
-2. `Add > Mesh > Plane`, then scale and move it so it lies flat **on** the ground
-   exactly where you want objects — a 2×2 m patch of pavement, the gutter by a kerb.
-3. Name it starting with `spawn_` (`spawn_pavement`, `spawn_gutter`, …). Add as many
-   as you like, then save.
-4. Verify: `blenderproc run inspect_blend.py -- --scene path/to/scene.blend`
-5. Add the file to `scene.files` in `config_scene.yaml`.
-
-Zones are never rendered and never annotated. An invisible box collider is built with
-its top face on the zone surface, so objects land on the zone regardless of what the
-scene's real ground mesh looks like. Keep zones flat and roughly axis-aligned; for
-sloped ground set `physics.collider: mesh`.
-
-`resources/example_scene.blend` (rebuild with `blenderproc run make_example_scene.py`)
-is a minimal already-marked-up scene showing the convention.
-
-## Assets
-
-The catalogue is built from two directories, both listed under `objects.model_dirs`:
-
-| directory | what it is |
-|---|---|
-| `resources/objects/<name>/<name>.blend` | 140 models converted from the `.usdz` originals in `resources/trash3D-…/`, one item per file, geometry joined and textures packed |
-| `~/blenderkit_data/models` | the original BlenderKit downloads |
-
-`resources/objects_needs_split/` holds 45 further models that each contain **several**
-items — a set of plates, three bottles, a pile of knives. They are deliberately outside
-`model_dirs`: `sdlib/assets.py` joins every mesh in a file into one object, so each of
-those would produce one COCO box spanning every item and one rigid body that falls as a
-lump. Split them in Blender to promote them; see that directory's README.
-
-`resources/assets/` is a flat archive of the same models as saved by Blender 5.2. The
-pipeline cannot read it — BlenderProc runs Blender 4.2.1, which rejects a 5.x file
-outright — so nothing points at it.
-
-### Adding or correcting assets
-
-`assets.yaml` maps each model file to one of 19 classes and to its real-world size.
-Every asset is uniformly rescaled on load so its longest axis matches `longest_m`, which
-cancels out the models' inconsistent unit conventions — one ships in centimetres,
-another at 1/1000 scale. Run `inspect_blend.py -- --assets` after editing to check the
-implied scale factors, and correct any `longest_m` that clearly does not match the item
-the model depicts.
-
-`match:` is a case-insensitive substring of the `.blend` path. For `resources/objects`
-write it as `/<name>/` — the slashes keep each rule matching exactly one model and stop
-`/knife/` from also swallowing `pocket_knife`. First rule that matches wins.
-
-Entries marked `CHECK:` are the ones where the model alone did not settle the size:
-`beer_`, `cigarette`, `fbx`, and the three container-plus-detached-lid models
-(`cc0_tin_can_4_open`, `cc0_potato_chips_tube_2_open`,
-`scan_chinese_steamer_freepolyorg`) whose bounding box spans both pieces.
-
-Three single-item models sit under `ignore:` rather than in the catalogue:
-`giggle_pacifier` and `covid_19_oral_vaccine_inhaler_prototype` are a large ground plane
-with a tiny prop on it (the plane is what would get annotated), and
-`controller_3d_scan_test` is an unidentifiable scrap of a test scan.
-
-### From `.usdz`
-
-The catalogue only globs `.blend`, so USD models (Apple Quick Look, Reality Composer,
-Polycam scans, Sketchfab USD exports) have to be converted first:
-
-```bash
-# One file, or a whole directory tree, into resources/objects/<name>/<name>.blend
-.venv/bin/blenderproc run usdz_to_blend.py -- --input ~/downloads/models --asset
-```
-
-`--asset` is the flag to use for catalogue models: it keeps geometry only, joins every
-mesh into one object (otherwise a bottle's cap and label each become their own COCO
-box), and centres the result. Without it the conversion is faithful — cameras, lights
-and hierarchy are preserved. The
-[full flag list](#usdz_to_blendpy--turn-usd-models-into-catalogue-assets) is above.
-
-Textures are packed into each `.blend`, so the output is self-contained: a `.usdz` is a
-zip and its images exist only inside it. The default output directory is
-`resources/objects`, which is already in `objects.model_dirs`, so a converted model only
-needs a `match: /<name>/` rule in `assets.yaml`; check it with
-`inspect_blend.py -- --assets`.
-
-Convert rather than saving from Blender by hand: BlenderProc runs Blender 4.2.1, which
-cannot open a file written by Blender 5.x at all — it rejects it as "not a blend file".
-
-## Layout
+## Repository layout
 
 ```
-generate.py            plane variant entry point
-generate_scene.py      scene variant entry point
-run_batch.py           renders many scenes (one process each) and merges the COCO files
-inspect_blend.py       --assets / --scene <file>: inspect the catalogue or a scene
-usdz_to_blend.py       converts .usdz/.usd models into catalogue-ready .blend files
-make_example_scene.py  rebuilds resources/example_scene.blend
-assets.yaml            class map + real-world sizes
+generate.py            render one scene (procedural or real-scene world)
+generate_scene.py      same, forced to real scenes
+run_batch.py           render many scenes, one process each, then merge the COCO files
+prepare_scenes.py      find spawn patches + crop lists in scenes/*.blend
+fetch_assets.py        download ground materials, HDRIs, plants, props (Poly Haven, ambientCG)
+fetch_objaverse.py     download litter models from Objaverse into catalog/objaverse.yaml
+catalog_sheet.py       render a thumbnail of every catalogue model + flag suspects
+qa_report.py           contact sheets (RGB | masks | depth) and statistics of a dataset
+benchmark_report.py    timing / memory / cost numbers and plots from a render run
+ship_dataset.py        pack finished scenes into tar shards and upload to Google Drive
+export_yolo.py         convert a dataset into Ultralytics YOLO-seg format
+inspect_blend.py       print sizes of catalogue models or the objects of a scene
+usdz_to_blend.py       convert .usdz/.usd models into catalogue-ready .blend files
+
+config.yaml            every randomisation range of the dataset
+asset_sources.yaml     what fetch_assets.py downloads
+assets.yaml            class list + hand-curated catalogue rules for resources/objects
+catalog/               more catalogue files: polyhaven.yaml, local.yaml, objaverse.yaml
+
 sdlib/
-  assets.py            catalogue, loading, size normalisation
+  pipeline.py          per-scene orchestration (stages above)
+  procedural.py        procedural worlds: layouts, biomes, props, clutter, grass
+  scenes.py            real .blend scenes: auto spawn zones, cropping
+  library.py           asset index, PBR material builder, Poly Haven model variants
+  scatter.py           geometry-nodes instancing and discrete placement
+  realism.py           deformation, grime, burial, shadow canopy
+  cameras.py           robot / arm / general rigs, ray-cast validation
+  assets.py            litter catalogue, loading, size normalisation
+  capture.py           renderer settings, annotation filtering, all writers
   environment.py       HDRI, lights, spawn zones, colliders, drop physics
-  capture.py           renderer setup, camera framing, annotation writing
-  pipeline.py          per-scene orchestration shared by both entry points
-  cli.py               argument parsing and start-up
-  config.py            YAML loading and path resolution
-resources/
-  objects/             catalogue models, one item per .blend
-  objects_needs_split/ models holding several items each - not in model_dirs
-  assets/              flat Blender 5.2 archive, unreadable by the pipeline
-  trash3D-.../         the .usdz originals everything above was converted from
-  haven/hdris/         HDRIs
+  cli.py, config.py    start-up and config loading
+
+brev/                  render-farm scripts (see "Rendering at scale")
+docs/test_report/      LaTeX report of the first pipeline test
+resources/             hand-collected models and HDRIs (git LFS)
+scenes/                real .blend environments (git LFS) + their .zones.json
+assets/                downloaded by fetch_*.py - not in git
+output/                rendered datasets - not in git
 ```
 
-## Notes
+---
 
-- One Blender process per scene is deliberate. Blender never frees appended materials,
-  images and meshes, so looping scenes in-process grows memory until it dies.
-- Segmentation is switched on immediately before rendering, not at start-up:
-  `enable_segmentation_output` stamps a `pass_index` onto objects *at call time*, and
-  anything created later is silently treated as background.
-- Focal length is keyframed per frame. `add_camera_pose` only keyframes position and
-  rotation, so setting `camera.data.lens` alone would apply the last sampled value to
-  every frame in the render.
-- Camera distance is derived from the subject's real size and the current focal length
-  rather than sampled from a metre range, so a long lens backs off and a wide lens
-  moves in.
-- Annotations below `annotations.min_visible_pixels` are dropped after rendering. The
-  instance segmap already accounts for occlusion, so this removes the sliver boxes left
-  by objects hidden behind scene geometry.
-- Blender's USD importer converts a Y-up stage to Z-up, but ignores `metersPerUnit`, so
-  a `.usdz` authored in centimetres imports 100× too large. `usdz_to_blend.py --scale`
-  corrects it; for catalogue assets it does not matter, since `longest_m` rescales them.
-- `import_cameras=False`/`import_lights=False` do not skip those USD prims — Blender
-  still imports them as empties to keep the hierarchy, which is why `--geometry-only`
-  deletes non-mesh objects itself.
-- BlenderKit assets carry per-asset licences (royalty-free vs CC-BY). Check them before
-  publishing a dataset built from them.
+## Configuration
+
+`config.yaml` is the single source of truth; nothing random is hard-coded. The
+sections in pipeline order:
+
+| section | controls |
+|---|---|
+| top level | output folder, scenes, views per scene, resolution (960×720), samples (64), denoiser |
+| `environments` | procedural vs real-scene weight |
+| `procedural` | biome weights, ground extent, spawn area, props/clutter/grass density, canopy, how many model files per scene |
+| `scene` | which `.blend` scenes, crop radius, automatic spawn-zone search |
+| `hdri`, `lights` | lighting |
+| `objects` | catalogue files, model folders, **class weights**, items per scene |
+| `realism` | deformation and grime probabilities and strengths |
+| `physics` | drop simulation |
+| `camera` | rig shares and every rig's ranges |
+| `annotations` | minimum visible pixels, empty-frame policy |
+
+For a quick look at a change, copy the config and lower `resolution`,
+`render_samples` and `views_per_scene`.
+
+---
+
+## Assets: where every model and texture comes from
+
+| what | source | licence | how it gets here |
+|---|---|---|---|
+| ground materials (~240 + ~600) | Poly Haven, ambientCG | CC0 | `fetch_assets.py` |
+| facade materials (~250) | Poly Haven, ambientCG | CC0 | `fetch_assets.py` |
+| HDRIs (~680) | Poly Haven | CC0 | `fetch_assets.py` |
+| grass, plants, stones, props, trees (~80 models) | Poly Haven | CC0 | `fetch_assets.py` |
+| litter, single items (14) | Poly Haven | CC0 | `fetch_assets.py` → `catalog/polyhaven.yaml` |
+| litter (~800) | Objaverse (Sketchfab uploads) | CC-BY 4.0 / CC0 | `fetch_objaverse.py` → `catalog/objaverse.yaml` |
+| litter (140 + 17) | earlier hand collection (`resources/objects`, BlenderKit) | mixed, see below | git LFS / `~/blenderkit_data` |
+| real scenes (5) | BlenderKit + own | per asset | git LFS |
+
+`assets/index.json` lists which downloaded ids belong to which group;
+`assets/manifest.jsonl` records source, id, licence and authors of every downloaded
+asset. `asset_sources.yaml` decides what is fetched and has a small `dev` profile.
+
+Some Poly Haven `.blend` files are saved by a newer Blender than 4.2 and cannot be
+opened; litter models therefore also get a glTF copy, scenery models are skipped.
+
+---
+
+## The litter catalogue
+
+Ten classes, chosen to line up with the supercategories of the real-photo dataset
+[TACO](http://tacodataset.org) so a model trained here can be validated on it:
+
+| id | class | examples |
+|---|---|---|
+| 1 | `bottle_plastic` | PET bottles, detergent bottles, jugs |
+| 2 | `bottle_glass` | beer/wine bottles, jars |
+| 3 | `can` | drink cans, tins, aerosols |
+| 4 | `paper` | paper, cardboard, cartons, paper bags, packs |
+| 5 | `cup` | disposable cups |
+| 6 | `plastic_film` | bags, wrappers, chip bags, sachets, foil |
+| 7 | `cigarette` | butts |
+| 8 | `container` | tubs, takeaway boxes, styrofoam |
+| 9 | `small_item` | caps, lids, straws, pens, matches |
+| 10 | `other` | everything else people drop |
+
+Catalogue files (`objects.catalogs`; the first defines the classes):
+
+* `assets.yaml` — hand-curated rules for `resources/objects` and BlenderKit models:
+  `match:` is a substring of the model path, `/<name>/` matches exactly one model;
+* `catalog/polyhaven.yaml`, `catalog/local.yaml` — explicit `glob:` / `path:` entries;
+* `catalog/objaverse.yaml` — generated; reject bad models by adding their uid to
+  `catalog/objaverse_rejects.txt` and rerunning `fetch_objaverse.py`.
+
+Every rule gives `longest_m`, the item's real longest dimension. Models arrive in mm,
+cm, m or arbitrary units; each is rescaled on load so its longest axis matches, then
+jittered a few percent. Scale is therefore a usable cue for the detector.
+
+Classes are drawn by `objects.class_weights` first and a model within the class
+second, so the class mix does not follow whichever class has the most downloads.
+
+**Always look at new models** before a big render:
+`blenderproc run catalog_sheet.py -- --source objaverse --out qa/objaverse`. The
+sheet shows every model next to a 10 cm red cube, with its class and size, and frames
+in red the ones with stray geometry or missing textures (`suspects.json`).
+
+`resources/objects_needs_split/` holds 46 files with several items each (a set of
+plates, three bottles). They are kept out of the catalogue on purpose — joined into
+one object they would get one box spanning every item; split them in Blender first.
+
+---
+
+## Output format
+
+```
+output/<dataset>/
+  scene_00042/
+    images/000000.png        RGB
+    depth/000000.png         uint16 depth along the optical axis in mm; 0 = sky / > 65.5 m
+    instance/000000.png      uint16; 0 = not litter, k = k-th litter object (stable across frames)
+    semantic/000000.png      uint8 class id per pixel (0 = background)
+    coco_annotations.json    COCO instances with RLE masks
+    scene_meta.json          world, biome, materials, HDRI, every object (+ licence),
+                             every camera (rig, height, tilt, FOV, K, pose), timings
+  coco_annotations.json      all scenes merged (run_batch.py --merge-only)
+  config.yaml, run_info.json the config and machine of the run
+  qa/                        contact sheets and stats
+```
+
+Depth and masks are rendered, i.e. exact. Sensor-like depth noise (stereo holes,
+noise growing with distance²) belongs in training-time augmentation, once the robot's
+depth camera is known.
+
+---
+
+## Checking the data
+
+```bash
+.venv/bin/python qa_report.py output/robot_v1 --count 48           # random frames
+.venv/bin/python qa_report.py output/robot_v1 --rig robot          # only the robot camera
+```
+
+Writes `qa/sheet_XX.jpg` (rows of RGB | masks with boxes and class names | depth) and
+`qa/stats.json` (frames per rig and biome, annotations per class, empty frames, box
+sizes). Read the sheets before trusting a new config — every systematic bug so far
+(black frames, mismatched masks, magenta missing textures, stray geometry) was
+obvious at a glance and invisible in the numbers.
+
+---
+
+## Rendering at scale on NVIDIA Brev
+
+The unit of work is the scene index (= seed), so splitting a run is arithmetic: give
+every machine and every GPU a disjoint index range. `brev/` automates it.
+
+```bash
+brev login                                    # opens a browser
+brev search gpu --gpu-name RTX --sort price   # pick an instance type
+brev create trash-1 --type massedcompute_RTX6000Adax4
+brev refresh                                  # adds `ssh trash-1` to ~/.ssh/config
+
+brev/push.sh trash-1                          # upload code + models, install, fetch assets
+brev/launch.sh --scenes 2000 trash-1 trash-2  # split scenes across instances, start in tmux
+ssh trash-1 -t tmux attach -t render          # watch (detach: Ctrl-b d)
+brev/pull.sh trash-1                          # optional: rsync results here instead of Drive
+brev delete trash-1                           # stop paying
+```
+
+| script | runs | does |
+|---|---|---|
+| `push.sh <inst>…` | locally | rsyncs code, scenes and hand-collected models (~4.5 GB) and the rclone config, then runs `setup.sh` |
+| `setup.sh` | instance | system libraries, venv, rclone, Blender; downloads the full asset set and Objaverse models on the data-centre link; prepares missing scene zones |
+| `launch.sh [opts] <inst>…` | locally | splits `[--start, --start+--scenes)` across instances, starts `render.sh` in tmux |
+| `render.sh [opts]` | instance | one `run_batch.py --resume` per GPU; ships finished shards to Drive every 10 min; at the end merges, writes QA, ships the rest; logs GPU/RAM utilisation |
+| `pull.sh <inst>…` | locally | rsyncs `scene_*` back and merges |
+
+`render.sh` resumes: rerun the same `launch.sh` after an interruption and only the
+missing scenes are rendered. Measured throughput and cost per GPU count are in the
+[test report](docs/test_report/report.pdf); `benchmark_report.py` recomputes them
+from any run.
+
+---
+
+## Google Drive
+
+Rendered data goes to Google Drive through [rclone](https://rclone.org) (remote name
+`gdrive`), into `gdrive:syntheticData/datasets/<dataset>/`:
+
+```
+shards/scenes_00000-00099.tar   100 scenes per tar (Drive is slow with many small files)
+meta/<host>/                    merged COCO, config, run info, QA sheets of each machine
+```
+
+Get a dataset back:
+
+```bash
+rclone copy gdrive:syntheticData/datasets/robot_v1/shards ./robot_v1_shards -P
+mkdir robot_v1 && for t in robot_v1_shards/*.tar; do tar xf "$t" -C robot_v1; done
+.venv/bin/python run_batch.py --merge-only --config <config with output_dir: robot_v1>
+```
+
+Set-up: `rclone config create gdrive drive scope=drive` on your machine; `push.sh`
+copies `~/.config/rclone/rclone.conf` to the instances. **Use your own Google OAuth
+client id** (`client_id`/`client_secret` in that config): rclone's shared one is being
+retired in 2026 and is already rate-limited (`403 Quota exceeded`) — see
+<https://rclone.org/drive/#making-your-own-client-id>.
+
+---
+
+## Training data export
+
+```bash
+.venv/bin/python export_yolo.py output/robot_v1 --out exports/robot_v1_yolo
+yolo segment train data=exports/robot_v1_yolo/data.yaml model=yolo11n-seg.pt imgsz=640
+```
+
+Polygons are traced from the rendered instance masks; the train/val split is by
+scene, never by frame. `--rig robot --rig arm` exports only the robot's own cameras.
+
+Suggested training recipe (from the literature on synthetic-to-real transfer):
+pre-train on the synthetic set, fine-tune on a few hundred labelled real images from
+the robot's camera, and measure only on real images.
+
+---
+
+## Known issues and next steps
+
+* **Validate on real images.** Collect a few hundred photos from the robot's camera
+  height on real sidewalks/lawns and label them (SAM can pre-label); add TACO for
+  extra variety. Synthetic validation scores say little about real performance.
+* **Match the real cameras.** Set `camera.robot.hfov_deg` / `camera.arm.hfov_deg`,
+  resolution and (if stereo depth is used) a depth-noise augmentation to the actual
+  sensors.
+* **Catalogue quality.** Review the Objaverse sheets and fill
+  `catalog/objaverse_rejects.txt`; small classes (`cup`, `cigarette`, `container`)
+  still need more models — Sketchfab and BlenderKit searches are the next sources.
+* **`scenes/warta.blend` is saved by Blender 5** and skipped; re-save it from Blender
+  4.2 (or replace it with `warta.blend1`). Same for `resources/assets/`.
+* **Grass hides litter**: on lawns ~half the frames lose their target to the grass
+  grown after the camera check and are dropped. Fine for realism, wasteful for
+  render time — a post-grass visibility check would recover them.
+* `resources/objects_needs_split/` — 46 multi-item models wait to be split.
+* Two FBX cans from `resources/objects_extra` have no texture file and render plain
+  white.
+
+---
+
+## Implementation notes (gotchas)
+
+* **One Blender process per scene.** Blender never frees appended data; looping
+  scenes in one process grows memory until it dies.
+* **Segmentation is enabled right before rendering**: `enable_segmentation_output`
+  stamps a `pass_index` onto objects at call time; anything created later is
+  silently background.
+* **BlenderProc's physics invalidates Python references to collections** (the
+  collection survives). `ModelLibrary` therefore looks its collection up by name.
+* **BlenderProc's `load_blend` purges new orphan data blocks**, which includes a
+  collection hanging off the scene root; library collections carry a fake user.
+* **No BlenderProc BVH trees.** They copy every triangle into Python lists (4–7 GB
+  with a lawn of weeds). Camera checks use Blender's own `scene.ray_cast`.
+* **Load few model files per scene.** Loading every tree for every scene cost
+  minutes and up to 13 GB; `procedural.models_per_scene` caps it, unused LODs are
+  purged before the simulation, and props use their lowest LOD.
+* **Focal length is keyframed per frame** — `add_camera_pose` only keyframes the
+  pose, so a plain `lens` assignment would apply the last value to every frame.
+* **A scene directory is cleared before writing** — the COCO writer appends, the
+  dense maps overwrite; a rerun into a used folder would pair images with the wrong
+  masks.
+* **Missing textures are unplugged** (`assets.fix_missing_images`) instead of
+  rendering Blender's magenta, which a detector would happily learn as "litter".
+* **Blender 4.2 cannot read files saved by Blender 5** ("not a blend file"); this
+  hits some Poly Haven downloads, `warta.blend` and `resources/assets/`.
+
+---
+
+## Licences
+
+* Poly Haven and ambientCG assets: CC0.
+* Objaverse models: kept only if CC-BY 4.0 or CC0 (no NC, no SA). **CC-BY requires
+  attribution** wherever the dataset is published: author and URL of every model are
+  in `catalog/objaverse.yaml` and per object in each `scene_meta.json`.
+* BlenderKit models: royalty-free or CC0 per asset; check before publishing.
+* If the trained model ships in a commercial product, note that Ultralytics YOLO is
+  AGPL-3.0 (an enterprise licence or an Apache-licensed model such as RF-DETR avoids
+  that).

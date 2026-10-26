@@ -1,0 +1,19 @@
+# Single-item litter from Poly Haven (CC0), downloaded by fetch_assets.py into
+# assets/polyhaven/models/<id>/<id>_<res>.blend - the resolution in the file name
+# depends on the fetch profile, hence `glob`.
+
+assets:
+  - {glob: "assets/polyhaven/models/can_rusted/*.blend", class: can, longest_m: 0.12, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/cardboard_box_01/*.blend", class: paper, longest_m: 0.35, scale_jitter: 0.25, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/plastic_bottle_gallon/*.blend", class: bottle_plastic, longest_m: 0.30, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/cigarette_pack/*.blend", class: paper, longest_m: 0.09, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/multi_cleaner_bottle/*.blend", class: bottle_plastic, longest_m: 0.26, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/drain_cleaner/*.blend", class: bottle_plastic, longest_m: 0.25, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/all_purpose_cleaner/*.blend", class: bottle_plastic, longest_m: 0.25, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/oil_tin/*.blend", class: can, longest_m: 0.20, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/leather_cleaner_can/*.blend", class: can, longest_m: 0.10, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/lubricant_spray/*.blend", class: can, longest_m: 0.20, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/cleaner_tin_01/*.blend", class: can, longest_m: 0.10, source: polyhaven, license: CC0}
+  - {glob: "assets/polyhaven/models/trashbag/*.blend", class: plastic_film, longest_m: 0.65, scale_jitter: 0.2, source: polyhaven, license: CC0, deformable: false}
+  - {glob: "assets/polyhaven/models/compost_bag_02/*.blend", class: plastic_film, longest_m: 0.55, scale_jitter: 0.2, source: polyhaven, license: CC0, deformable: false}
+  - {glob: "assets/polyhaven/models/long_life_food/*.blend", class: paper, longest_m: 0.20, source: polyhaven, license: CC0}

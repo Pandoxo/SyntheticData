@@ -1,0 +1,45 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{polski}
+\usepackage{lmodern}
+\usepackage[margin=1.8cm,top=1.6cm,bottom=1.8cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\captionsetup{font=small,labelfont=bf}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+\definecolor{accent}{HTML}{2F5D8A}
+
+\input{numbers.tex}
+
+\title{\vspace{-1.2em}\textbf{Syntetyczny dataset śmieci --- test pipeline'u}\\[0.2em]
+\large Render na \NumGpus$\times$ \NumGpuModel{} (NVIDIA Brev)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+\begin{tcolorbox}[colback=accent!6,colframe=accent,title=\textbf{Najważniejsze liczby},fonttitle=\small]
+\small
+\begin{tabularx}{\linewidth}{@{}X r@{}}
+Przepustowość na jedną kartę (\NumJobsPerGpu{} procesy Blendera na GPU) & \textbf{\NumImgPerHourGpu{} obrazów/h} \\
+Przepustowość całej maszyny (\NumGpus{} karty) & \NumImgPerHourNode{} obrazów/h \\
+Czas karty na jeden obraz (RGB + głębia + maski + COCO) & \NumSecPerImageGpu{}\,s \\
+Koszt (\$\NumPrice/h za maszynę, \$\NumPricePerGpu/h za kartę) & \textbf{\$\NumCostPerK{} za 1000 obrazów} \\
+Pamięć RAM na proces Blendera (mediana / maksimum) & \NumRssMedian{} / \NumRssMax{}\,GB \\
+VRAM: szczyt na karcie / dostępne & \NumVramPeak{} / \NumVramTotal{}\,GiB \\
+\end{tabularx}
+\end{tcolorbox}
+
+\INSERTSUMMARY
+
+\end{document}

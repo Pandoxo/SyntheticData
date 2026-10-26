@@ -1,0 +1,413 @@
+{
+ "scene": "forest.blend",
+ "crop_radius_m": 25.0,
+ "total_objects": 73,
+ "zones": [
+  {
+   "name": "spawn_1",
+   "manual": true,
+   "center": [
+    -6.510583877563477,
+    10.756512641906738,
+    0.9920297265052795
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree2.008",
+    "tree2.007",
+    "tree2.006",
+    "tree2.005",
+    "tree2.004",
+    "tree2.003",
+    "tree2.002",
+    "tree2.001",
+    "tree2",
+    "SCATTER5_placeholder_pyramidal_triangle",
+    "SCATTER5_placeholder_pyramidal_square",
+    "SCATTER5_placeholder_pyramidal_pentagon",
+    "SCATTER5_placeholder_pyramidal_hexagon",
+    "SCATTER5_placeholder_pyramidal_decagon",
+    "SCATTER5_placeholder_lowpoly_sapling_02",
+    "SCATTER5_placeholder_lowpoly_sapling_01",
+    "SCATTER5_placeholder_lowpoly_plant_07",
+    "SCATTER5_placeholder_lowpoly_plant_06",
+    "SCATTER5_placeholder_lowpoly_plant_05",
+    "SCATTER5_placeholder_lowpoly_plant_04",
+    "SCATTER5_placeholder_lowpoly_plant_03",
+    "SCATTER5_placeholder_lowpoly_plant_02",
+    "SCATTER5_placeholder_lowpoly_plant_01",
+    "SCATTER5_placeholder_lowpoly_pine_04",
+    "SCATTER5_placeholder_lowpoly_pine_03",
+    "SCATTER5_placeholder_lowpoly_pine_02",
+    "SCATTER5_placeholder_lowpoly_pine_01",
+    "SCATTER5_placeholder_lowpoly_flower_04",
+    "SCATTER5_placeholder_lowpoly_flower_03",
+    "SCATTER5_placeholder_lowpoly_flower_02",
+    "SCATTER5_placeholder_lowpoly_flower_01",
+    "SCATTER5_placeholder_lowpoly_coniferous_05",
+    "SCATTER5_placeholder_lowpoly_coniferous_04",
+    "SCATTER5_placeholder_lowpoly_coniferous_03",
+    "SCATTER5_placeholder_lowpoly_coniferous_02",
+    "SCATTER5_placeholder_lowpoly_coniferous_01",
+    "SCATTER5_placeholder_lowpoly_cluster_04",
+    "SCATTER5_placeholder_lowpoly_cluster_03",
+    "SCATTER5_placeholder_lowpoly_cluster_02",
+    "SCATTER5_placeholder_lowpoly_cluster_01",
+    "SCATTER5_placeholder_hemisphere_04",
+    "SCATTER5_placeholder_hemisphere_03",
+    "SCATTER5_placeholder_hemisphere_02",
+    "SCATTER5_placeholder_hemisphere_01",
+    "SCATTER5_placeholder_helper_y_arrow",
+    "SCATTER5_placeholder_helper_colored_cube",
+    "SCATTER5_placeholder_helper_colored_axis",
+    "SCATTER5_placeholder_flat_triangle",
+    "SCATTER5_placeholder_flat_square",
+    "SCATTER5_placeholder_flat_pentagon",
+    "SCATTER5_placeholder_flat_hexagon",
+    "SCATTER5_placeholder_flat_decagon",
+    "SCATTER5_placeholder_extruded_triangle",
+    "SCATTER5_placeholder_extruded_square",
+    "SCATTER5_placeholder_extruded_pentagon",
+    "SCATTER5_placeholder_extruded_hexagon",
+    "SCATTER5_placeholder_extruded_decagon",
+    "SCATTER5_placeholder_card_triangle",
+    "SCATTER5_placeholder_card_square",
+    "SCATTER5_placeholder_card_pentagon",
+    "Plane",
+    "Object",
+    "grass 1.001",
+    "grass 1",
+    "Cube.001",
+    "1.007",
+    "1.005",
+    "1.004",
+    "1.003",
+    "1.002",
+    "1.001",
+    "1",
+    "spawn_1"
+   ]
+  },
+  {
+   "name": "auto_00",
+   "manual": false,
+   "center": [
+    -47.39343360066414,
+    38.263256549835205,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Cube.001"
+   ]
+  },
+  {
+   "name": "auto_01",
+   "manual": false,
+   "center": [
+    -19.39343360066414,
+    -19.736743450164795,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Plane",
+    "Object",
+    "Cube.001"
+   ]
+  },
+  {
+   "name": "auto_02",
+   "manual": false,
+   "center": [
+    18.60656639933586,
+    49.263256549835205,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "SCATTER5_placeholder_lowpoly_plant_07",
+    "SCATTER5_placeholder_lowpoly_coniferous_05",
+    "Cube.001"
+   ]
+  },
+  {
+   "name": "auto_03",
+   "manual": false,
+   "center": [
+    -8.893433600664139,
+    49.263256549835205,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "SCATTER5_placeholder_lowpoly_plant_07",
+    "SCATTER5_placeholder_lowpoly_plant_06",
+    "SCATTER5_placeholder_lowpoly_plant_05",
+    "SCATTER5_placeholder_lowpoly_plant_04",
+    "SCATTER5_placeholder_lowpoly_pine_04",
+    "SCATTER5_placeholder_lowpoly_pine_03",
+    "SCATTER5_placeholder_lowpoly_flower_04",
+    "SCATTER5_placeholder_lowpoly_flower_03",
+    "SCATTER5_placeholder_lowpoly_coniferous_05",
+    "Plane",
+    "Cube.001"
+   ]
+  },
+  {
+   "name": "auto_04",
+   "manual": false,
+   "center": [
+    -2.893433600664139,
+    7.263256549835205,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree2.008",
+    "tree2.007",
+    "tree2.006",
+    "tree2.005",
+    "tree2.004",
+    "tree2.003",
+    "tree2.002",
+    "tree2.001",
+    "tree2",
+    "SCATTER5_placeholder_pyramidal_triangle",
+    "SCATTER5_placeholder_pyramidal_square",
+    "SCATTER5_placeholder_pyramidal_pentagon",
+    "SCATTER5_placeholder_pyramidal_hexagon",
+    "SCATTER5_placeholder_pyramidal_decagon",
+    "SCATTER5_placeholder_lowpoly_sapling_02",
+    "SCATTER5_placeholder_lowpoly_sapling_01",
+    "SCATTER5_placeholder_lowpoly_plant_07",
+    "SCATTER5_placeholder_lowpoly_plant_06",
+    "SCATTER5_placeholder_lowpoly_plant_05",
+    "SCATTER5_placeholder_lowpoly_plant_04",
+    "SCATTER5_placeholder_lowpoly_plant_03",
+    "SCATTER5_placeholder_lowpoly_plant_02",
+    "SCATTER5_placeholder_lowpoly_plant_01",
+    "SCATTER5_placeholder_lowpoly_pine_04",
+    "SCATTER5_placeholder_lowpoly_pine_03",
+    "SCATTER5_placeholder_lowpoly_pine_02",
+    "SCATTER5_placeholder_lowpoly_pine_01",
+    "SCATTER5_placeholder_lowpoly_flower_04",
+    "SCATTER5_placeholder_lowpoly_flower_03",
+    "SCATTER5_placeholder_lowpoly_flower_02",
+    "SCATTER5_placeholder_lowpoly_flower_01",
+    "SCATTER5_placeholder_lowpoly_coniferous_04",
+    "SCATTER5_placeholder_lowpoly_coniferous_03",
+    "SCATTER5_placeholder_lowpoly_coniferous_02",
+    "SCATTER5_placeholder_lowpoly_coniferous_01",
+    "SCATTER5_placeholder_lowpoly_cluster_04",
+    "SCATTER5_placeholder_lowpoly_cluster_03",
+    "SCATTER5_placeholder_lowpoly_cluster_02",
+    "SCATTER5_placeholder_lowpoly_cluster_01",
+    "SCATTER5_placeholder_hemisphere_04",
+    "SCATTER5_placeholder_hemisphere_03",
+    "SCATTER5_placeholder_hemisphere_02",
+    "SCATTER5_placeholder_hemisphere_01",
+    "SCATTER5_placeholder_helper_y_arrow",
+    "SCATTER5_placeholder_helper_colored_cube",
+    "SCATTER5_placeholder_helper_colored_axis",
+    "SCATTER5_placeholder_flat_triangle",
+    "SCATTER5_placeholder_flat_square",
+    "SCATTER5_placeholder_flat_pentagon",
+    "SCATTER5_placeholder_flat_hexagon",
+    "SCATTER5_placeholder_flat_decagon",
+    "SCATTER5_placeholder_extruded_triangle",
+    "SCATTER5_placeholder_extruded_square",
+    "SCATTER5_placeholder_extruded_pentagon",
+    "SCATTER5_placeholder_extruded_hexagon",
+    "SCATTER5_placeholder_extruded_decagon",
+    "SCATTER5_placeholder_card_triangle",
+    "SCATTER5_placeholder_card_square",
+    "SCATTER5_placeholder_card_pentagon",
+    "Plane",
+    "Object",
+    "grass 1.001",
+    "grass 1",
+    "Cube.001",
+    "1.007",
+    "1.005",
+    "1.004",
+    "1.003",
+    "1.002",
+    "1.001",
+    "1"
+   ]
+  },
+  {
+   "name": "auto_05",
+   "manual": false,
+   "center": [
+    29.60656639933586,
+    45.763256549835205,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Cube.001"
+   ]
+  },
+  {
+   "name": "auto_06",
+   "manual": false,
+   "center": [
+    22.10656639933586,
+    -29.736743450164795,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Object",
+    "Cube.001"
+   ]
+  },
+  {
+   "name": "auto_07",
+   "manual": false,
+   "center": [
+    17.60656639933586,
+    35.763256549835205,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "SCATTER5_placeholder_lowpoly_sapling_02",
+    "SCATTER5_placeholder_lowpoly_sapling_01",
+    "SCATTER5_placeholder_lowpoly_plant_07",
+    "SCATTER5_placeholder_lowpoly_plant_06",
+    "SCATTER5_placeholder_lowpoly_plant_05",
+    "SCATTER5_placeholder_lowpoly_plant_04",
+    "SCATTER5_placeholder_lowpoly_plant_03",
+    "SCATTER5_placeholder_lowpoly_pine_04",
+    "SCATTER5_placeholder_lowpoly_pine_03",
+    "SCATTER5_placeholder_lowpoly_flower_04",
+    "SCATTER5_placeholder_lowpoly_flower_03",
+    "SCATTER5_placeholder_lowpoly_flower_02",
+    "SCATTER5_placeholder_lowpoly_flower_01",
+    "SCATTER5_placeholder_lowpoly_coniferous_05",
+    "SCATTER5_placeholder_lowpoly_coniferous_04",
+    "SCATTER5_placeholder_lowpoly_coniferous_03",
+    "SCATTER5_placeholder_lowpoly_cluster_04",
+    "SCATTER5_placeholder_lowpoly_cluster_03",
+    "SCATTER5_placeholder_lowpoly_cluster_02",
+    "Plane",
+    "Cube.001",
+    "1.002"
+   ]
+  },
+  {
+   "name": "auto_08",
+   "manual": false,
+   "center": [
+    49.10656639933586,
+    5.763256549835205,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Object",
+    "Cube.001"
+   ]
+  },
+  {
+   "name": "auto_09",
+   "manual": false,
+   "center": [
+    -18.89343360066414,
+    -12.236743450164795,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree2.008",
+    "SCATTER5_placeholder_pyramidal_triangle",
+    "SCATTER5_placeholder_pyramidal_square",
+    "SCATTER5_placeholder_pyramidal_pentagon",
+    "SCATTER5_placeholder_pyramidal_hexagon",
+    "SCATTER5_placeholder_lowpoly_pine_02",
+    "SCATTER5_placeholder_lowpoly_pine_01",
+    "SCATTER5_placeholder_flat_triangle",
+    "SCATTER5_placeholder_flat_square",
+    "SCATTER5_placeholder_flat_pentagon",
+    "SCATTER5_placeholder_extruded_triangle",
+    "SCATTER5_placeholder_extruded_square",
+    "SCATTER5_placeholder_extruded_pentagon",
+    "SCATTER5_placeholder_extruded_hexagon",
+    "SCATTER5_placeholder_extruded_decagon",
+    "Plane",
+    "Object",
+    "Cube.001"
+   ]
+  },
+  {
+   "name": "auto_10",
+   "manual": false,
+   "center": [
+    52.60656639933586,
+    -27.236743450164795,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Object",
+    "Cube.001"
+   ]
+  },
+  {
+   "name": "auto_11",
+   "manual": false,
+   "center": [
+    -44.89343360066414,
+    8.263256549835205,
+    81.91191864013672
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Plane",
+    "Cube.001"
+   ]
+  }
+ ]
+}

@@ -14,3 +14,21 @@ __pycache__/
 *.tif
 *.tiff
 *.hdr
+
+# Per-GPU logs written by brev/render.sh
+logs/
+assets/
+
+# Downloaded or generated, never committed
+qa/
+exports/
+docs/test_report/*.aux
+docs/test_report/*.log
+docs/test_report/*.out
+docs/test_report/*.fls
+docs/test_report/*.fdb_latexmk
+
+# ...but these images are part of the repo
+!docs/test_report/figures/*.png
+!docs/test_report/figures/*.jpg
+!resources/objects_extra/**/*.png

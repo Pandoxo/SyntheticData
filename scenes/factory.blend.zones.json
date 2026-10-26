@@ -1,0 +1,492 @@
+{
+ "scene": "factory.blend",
+ "crop_radius_m": 25.0,
+ "total_objects": 30,
+ "zones": [
+  {
+   "name": "spawn_wall",
+   "manual": true,
+   "center": [
+    -14.35708236694336,
+    -6.744903564453125,
+    0.001007080078125
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Radio_Kootwijk",
+    "Pavement",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Fence",
+    "spawn_wall"
+   ]
+  },
+  {
+   "name": "spawn_lamp",
+   "manual": true,
+   "center": [
+    -9.234162330627441,
+    -36.48480224609375,
+    0.001007080078125
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Radio_Kootwijk",
+    "Pool_water",
+    "Pavement",
+    "Lamp_pole_2",
+    "Lamp_pole_1",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Fence",
+    "Cigarette_decal_1",
+    "spawn_lamp"
+   ]
+  },
+  {
+   "name": "spawn_fence",
+   "manual": true,
+   "center": [
+    16.291790008544922,
+    -24.93877410888672,
+    0.001007080078125
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Radio_Kootwijk",
+    "Pool_water",
+    "Pavement",
+    "Lamp_pole_2",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Fence",
+    "Cigarette_decal_5",
+    "spawn_fence"
+   ]
+  },
+  {
+   "name": "spawn_door",
+   "manual": true,
+   "center": [
+    -0.6831307411193848,
+    -23.20996856689453,
+    0.001007080078125
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Radio_Kootwijk",
+    "Pool_water",
+    "Pavement",
+    "Lamp_pole_2",
+    "Lamp_pole_1",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Fence",
+    "Cigarette_decal_5",
+    "Cigarette_decal_1",
+    "spawn_door"
+   ]
+  },
+  {
+   "name": "spawn_brick",
+   "manual": true,
+   "center": [
+    -17.725711822509766,
+    -14.619903564453125,
+    0.001007080078125
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Radio_Kootwijk",
+    "Pavement",
+    "Lamp_pole_1",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Fence",
+    "Cigarette_decal_1",
+    "spawn_brick"
+   ]
+  },
+  {
+   "name": "auto_00",
+   "manual": false,
+   "center": [
+    -38.80649518966675,
+    -40.42596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Pavement",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Cigarette_decal_1"
+   ]
+  },
+  {
+   "name": "auto_01",
+   "manual": false,
+   "center": [
+    -10.806495189666748,
+    -98.42596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Pavement",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Entrance_buildings"
+   ]
+  },
+  {
+   "name": "auto_02",
+   "manual": false,
+   "center": [
+    27.193504810333252,
+    -29.42596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Radio_Kootwijk",
+    "Pool_water",
+    "Pavement",
+    "Lamp_pole_2",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Fence",
+    "Cigarette_decal_5"
+   ]
+  },
+  {
+   "name": "auto_03",
+   "manual": false,
+   "center": [
+    -0.30649518966674805,
+    -29.42596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Radio_Kootwijk",
+    "Pool_water",
+    "Pavement",
+    "Lamp_pole_2",
+    "Lamp_pole_1",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Fence",
+    "Cigarette_decal_5",
+    "Cigarette_decal_1"
+   ]
+  },
+  {
+   "name": "auto_04",
+   "manual": false,
+   "center": [
+    5.693504810333252,
+    -71.42596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Pool_water",
+    "Pavement",
+    "Lamp_pole_4",
+    "Lamp_pole_3",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Grass_clump",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Entrance_buildings",
+    "Cigarette_decal_6",
+    "Cigarette_decal_4",
+    "Cigarette_decal_3",
+    "Cigarette_decal_2"
+   ]
+  },
+  {
+   "name": "auto_05",
+   "manual": false,
+   "center": [
+    38.19350481033325,
+    -32.92596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Radio_Kootwijk",
+    "Pavement",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Fence",
+    "Cigarette_decal_5"
+   ]
+  },
+  {
+   "name": "auto_06",
+   "manual": false,
+   "center": [
+    30.693504810333252,
+    -108.42596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Pavement",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Entrance_buildings"
+   ]
+  },
+  {
+   "name": "auto_07",
+   "manual": false,
+   "center": [
+    26.193504810333252,
+    -42.92596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Radio_Kootwijk",
+    "Pool_water",
+    "Pavement",
+    "Lamp_pole_2",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Fence",
+    "Cigarette_decal_5"
+   ]
+  },
+  {
+   "name": "auto_08",
+   "manual": false,
+   "center": [
+    57.69350481033325,
+    -72.92596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Treeline",
+    "Sky",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Fog_volume_near",
+    "Fog_volume_distant"
+   ]
+  },
+  {
+   "name": "auto_09",
+   "manual": false,
+   "center": [
+    -10.306495189666748,
+    -90.92596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Pavement",
+    "Lamp_pole_3",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Grass_clump",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Entrance_buildings",
+    "Cigarette_decal_6",
+    "Cigarette_decal_2"
+   ]
+  },
+  {
+   "name": "auto_10",
+   "manual": false,
+   "center": [
+    61.19350481033325,
+    -105.92596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Treeline",
+    "Sky",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Fog_volume_near",
+    "Fog_volume_distant"
+   ]
+  },
+  {
+   "name": "auto_11",
+   "manual": false,
+   "center": [
+    -36.30649518966675,
+    -70.42596435546875,
+    600.0
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "Walls",
+    "Treeline",
+    "Sky",
+    "Pavement",
+    "Grass_meadow_emitter",
+    "Grass_meadow",
+    "Grass_dense_emitter",
+    "Grass_dense",
+    "Fog_volume_near",
+    "Fog_volume_distant",
+    "Entrance_buildings",
+    "Cigarette_decal_2"
+   ]
+  }
+ ]
+}

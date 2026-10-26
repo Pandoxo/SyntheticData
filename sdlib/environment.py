@@ -17,6 +17,15 @@ class Environment:
     zones     - invisible surfaces marking where trash is allowed to land
     colliders - invisible passive rigid bodies the trash actually lands on
     statics   - visible scene geometry (background, labelled category_id 0)
+
+    Builders can also provide:
+    ground_fn(x, y)                      height of the walkable ground, or None where a
+                                         robot cannot stand (inside a wall, off the map)
+    after_physics(trash, rng)            runs once the litter has landed; may return
+                                         {"statics": [...]} to add to the ray checks
+    after_cameras(trash, frames, rng)    runs once the views are fixed (grass is grown
+                                         here, clear of where the robot stands)
+    meta                                 dict merged into scene_meta.json
     """
 
     def __init__(self, zones, colliders, statics, description=""):
@@ -24,9 +33,16 @@ class Environment:
         self.colliders = colliders
         self.statics = statics
         self.description = description
+        self.ground_fn = None
+        self.after_physics = None
+        self.after_cameras = None
+        self.meta = {}
 
     def all_objects(self):
         return list(self.zones) + list(self.colliders) + list(self.statics)
+
+    def ground_height(self, x, y):
+        return self.ground_fn(x, y) if self.ground_fn is not None else None
 
 
 # --------------------------------------------------------------------------- HDRI
@@ -56,19 +72,24 @@ def is_dark_hdri(path, patterns):
     return any(p.lower() in name for p in patterns)
 
 
-def setup_world(hdri_paths, cfg, rng):
-    """Pick an HDRI, set it with a random yaw, and report what was chosen."""
+def setup_world(hdri_paths, cfg, rng, dark_names=frozenset()):
+    """Pick an HDRI, set it with a random yaw, and report what was chosen.
+
+    `dark_names` are HDRI folder/file stems known to be night shots (from the asset
+    manifest's categories); filename patterns from the config catch the rest.
+    """
     path = hdri_paths[int(rng.integers(0, len(hdri_paths)))]
     strength = float(rng.uniform(*cfg["strength_range"]))
     yaw_deg = float(rng.uniform(*cfg["rotation_range_deg"]))
 
     # Rotating the environment moves the sun and every shadow with it. This is the
-    # cheapest variation axis available and was configured but never applied before.
+    # cheapest variation axis available.
     bproc.world.set_world_background_hdr_img(
         path, strength=strength, rotation_euler=[0.0, 0.0, math.radians(yaw_deg)])
 
-    return {"path": path, "strength": strength, "rotation_deg": yaw_deg,
-            "is_dark": is_dark_hdri(path, cfg.get("dark_patterns", []))}
+    stem = os.path.basename(os.path.dirname(path))
+    is_dark = is_dark_hdri(path, cfg.get("dark_patterns", [])) or stem in dark_names
+    return {"path": path, "strength": strength, "rotation_deg": yaw_deg, "is_dark": is_dark}
 
 
 def add_lights(cfg, poi, rng):
