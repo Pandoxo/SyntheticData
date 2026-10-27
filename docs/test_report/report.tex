@@ -1,0 +1,127 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{polski}
+\usepackage{lmodern}
+\usepackage[margin=1.6cm,top=1.4cm,bottom=1.6cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+
+\captionsetup{font=small,labelfont=bf}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+\definecolor{accent}{HTML}{2F5D8A}
+
+\input{numbers.tex}
+
+\title{\vspace{-1.2em}\textbf{Syntetyczny dataset śmieci --- test pipeline'u}\\[0.2em]
+\large Render na \NumGpus$\times$ \NumGpuModel{} (NVIDIA Brev)}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+\begin{tcolorbox}[colback=accent!6,colframe=accent,title=\textbf{Najważniejsze liczby},fonttitle=\small]
+\small
+\begin{tabularx}{\linewidth}{@{}X r@{}}
+Przepustowość na jedną kartę (\NumJobsPerGpu{} procesy Blendera na GPU) & \textbf{\NumImgPerHourGpu{} obrazów/h} \\
+Przepustowość całej maszyny (\NumGpus{} karty) & \NumImgPerHourNode{} obrazów/h \\
+Czas karty na jeden obraz (RGB + głębia + maski + COCO) & \NumSecPerImageGpu{}\,s \\
+Koszt (\$\NumPrice/h za maszynę, \$\NumPricePerGpu/h za kartę) & \textbf{\$\NumCostPerK{} za 1000 obrazów} \\
+Pamięć RAM na proces Blendera (mediana / maksimum) & \NumRssMedian{} / \NumRssMax{}\,GB \\
+VRAM: szczyt na karcie / dostępne & \NumVramPeak{} / \NumVramTotal{}\,GiB \\
+\end{tabularx}
+\end{tcolorbox}
+
+
+\section*{1. Co zostało przetestowane}
+Pełny pipeline, od pustej maszyny do zbioru na Google Drive: \texttt{brev/push.sh} (instalacja, pobranie 28\,GB assetów i 800 modeli z Objaverse), \texttt{brev/render.sh} (render na wszystkich kartach), pakowanie i wysyłka na Drive. Maszyna: Brev \texttt{massedcompute\_RTX6000Adax4} --- \NumGpus$\times$ RTX 6000 Ada (48\,GB), 52 vCPU, \NumHostRamTotal\,GB RAM, \$\NumPrice/h.
+
+Konfiguracja produkcyjna z \texttt{config.yaml}: \NumScenes{} scen po 12 widoków, 960$\times$720\,px, Cycles 64 próbki + odszumianie OptiX, 80\,\% światów proceduralnych (8 biomów) i 20\,\% wycinków gotowych scen \texttt{.blend}, 3--9 śmieci na scenę z katalogu $\sim$1000 modeli. Każdy obraz: RGB, głębia (mm), maska instancji, maska semantyczna, COCO.
+
+\textbf{Wynik:} \NumScenes/\NumScenes{} scen bez błędu, \NumRendered{} wyrenderowanych klatek, z czego \NumImages{} (\NumKeptPct\,\%) przeszło filtr widoczności, \NumAnnotations{} adnotacji, \NumElapsedMin{} minut. Udział kamer: robot 41\,\%, ramię 29\,\%, ogólna 30\,\%; 7\,\% klatek to celowe negatywy bez śmieci. Paczka (1,2\,GB) wysłała się na Drive automatycznie.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{figures/samples.jpg}
+\caption{Losowe klatki z testu (opis: kamera | świat). Górny rząd i pierwszy w środku: kamera robota 6--16\,cm nad ziemią; ramię: widok z góry na przedmiot; dół: kamera ogólna.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.66\linewidth]{figures/modalities.jpg}
+\caption{Co dostaje każdy obraz: RGB | maska (kolor = klasa) | głębia. Góra: robot na trawniku (trawa 3D przed obiektywem), dół: kamera ramienia.}
+\end{figure}
+
+\section*{2. Czas}
+Mediana sceny (12 widoków) to \NumSceneMedian\,s, 90.\ percentyl \NumSceneNinety\,s. Średnio: budowa świata \NumStageEnv\,s, fizyka \NumStagePhys\,s, klutter \NumStageClutter\,s, kamery \NumStageCams\,s, \textbf{render \NumStageRender\,s} (ok.\ 3\,s na klatkę), zapis \NumStageWrite\,s. Odstaje jedna scena: \texttt{factory.blend} --- mediana 329\,s, kilka razy dłużej niż reszta (30--110\,s).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.66\linewidth]{figures/stages.png}
+\caption{Gdzie idzie czas sceny. Światy proceduralne: ok.\ 1/3 to budowa świata (wczytanie modeli Poly Haven, materiały), 1/2 render. Gotowe sceny: prawie wszystko to render (duża geometria i tekstury).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.66\linewidth]{figures/utilisation.png}
+\caption{Wykorzystanie w teście A. Karty pracują zrywami --- średnio \NumGpuUtil\,\%. Ostatnie 3 minuty pracują już tylko 2 karty: sceny są przydzielone kartom na sztywno, a najwolniejsze trafiły w jeden przedział.}
+\end{figure}
+
+\section*{3. Wąskie gardło: procesor, nie karta}
+Średnie obciążenie GPU w teście A to tylko \textbf{\NumGpuUtil\,\%}, a obciążenie CPU \NumHostLoad{} na 52 rdzenie. Render w Cyclesie trwa krótko --- większość czasu sceny to praca procesora: wczytywanie modeli i tekstur, fizyka, rzuty promieni kamer i przygotowanie sceny do renderu.
+
+Żeby to potwierdzić, \textbf{test B} uruchomił 4 procesy na \emph{jednej} karcie, z dostępem do wszystkich 52 rdzeni (\NumBScenes{} scen, \NumBImages{} obrazów): \textbf{\NumBImgPerHour{} obrazów/h na kartę} --- 2,7 razy więcej niż w teście A, przy GPU obciążonym w \NumBGpuUtil\,\% i VRAM \NumBVram\,GB. W obu testach wychodzi ok.\ \textbf{85 obrazów/h na zajęty rdzeń CPU}. Wniosek: przepustowość wyznacza liczba rdzeni, karta jest wykorzystana w 10--30\,\%.
+
+\section*{4. Pamięć}
+\begin{tabularx}{\linewidth}{@{}X r@{}}
+\toprule
+RAM jednego procesu Blendera (mediana / 90.\ perc.\ / maks.) & \NumRssMedian{} / 6,9 / \NumRssMax\,GB \\
+RAM całej maszyny przy 8 procesach (szczyt) & \NumHostRamPeak{} z \NumHostRamTotal\,GB \\
+VRAM na kartę: 2 procesy (test A) / 4 procesy (test B) & \NumVramPeak{} / \NumBVram\,GB z 48 \\
+Dysk: assety / jedna scena (12 obrazów, wszystkie mapy) & 28\,GB / ok.\ 13\,MB \\
+\bottomrule
+\end{tabularx}
+
+Zasada doboru: \textbf{ok.\ 8\,GB RAM i ok.\ 6 rdzeni na proces Blendera, ok.\ 4\,GB VRAM na proces}. Karta 16--24\,GB wystarczy na 4 procesy.
+
+\section*{5. Koszt i skalowanie}
+Render nie wymaga komunikacji między maszynami (scena = ziarno losowania), więc czas maleje liniowo z liczbą kart. Tabela: zmierzone tempo z testu A (\NumImgPerHourGpu{} obrazów/h na kartę, \$\NumPricePerGpu/h za kartę), czyli \textbf{\$\NumCostPerK{} za 1000 obrazów} niezależnie od liczby kart:
+
+\begin{center}
+\begin{tabular}{@{}l rrrrr r@{}}
+\toprule
+Obrazów & 1 karta & 4 karty & 8 kart & 16 kart & 32 karty & Koszt \\
+\midrule
+\ProjectionRows
+\bottomrule
+\end{tabular}
+\end{center}
+
+To szacunek ostrożny. Ponieważ liczą się rdzenie, a nie karty, ten sam budżet da się wykorzystać lepiej:
+\begin{itemize}\itemsep0pt
+\item \textbf{Ta sama maszyna, 3 procesy na kartę} (12 procesów na 52 rdzenie): ok.\ 4\,000--4\,300 obrazów/h, ok.\ \$1,1 za 1000.
+\item \textbf{Tańsze maszyny z dużą liczbą rdzeni na kartę.} Np.\ \texttt{hyperstack\_A6000}: 1 karta, 28 vCPU, \$0,60/h. Przy 85 obrazach/h na rdzeń to ok.\ 2\,000 obrazów/h, czyli \textbf{ok.\ \$0,3 za 1000} --- 4 razy taniej. \emph{Hipoteza do sprawdzenia jednym krótkim testem.}
+\end{itemize}
+
+\section*{6. Wnioski i następne kroki}
+\begin{enumerate}\itemsep0pt
+\item Pipeline działa od początku do końca: instalacja, pobranie assetów, render na 4 kartach, QA, wysyłka na Drive --- bez ręcznej pracy i bez błędów w teście A.
+\item 100\,tys.\ obrazów to ok.\ \$126 i 27\,h na jednej maszynie 4$\times$GPU albo ok.\ 7\,h na czterech.
+\item Optymalizacje w kolejności zysku: maszyny z większą liczbą rdzeni na kartę i 3--4 procesy na kartę (2--4$\times$); dynamiczna kolejka scen zamiast sztywnego podziału na karty ($\sim$15\,\%); naprawa lub usunięcie \texttt{factory.blend}; cache wczytanych modeli Poly Haven.
+\item Jakość danych: przejrzeć modele z Objaverse (\texttt{catalog\_sheet.py}); jedna z gotowych scen ma przezroczystą podłogę pod strefą; \texttt{warta.blend} wymaga zapisu w Blenderze 4.2.
+\item Najważniejsze: walidacja na \emph{prawdziwych} zdjęciach z kamery robota.
+\end{enumerate}
+
+{\footnotesize\textbf{Ograniczenia testu:} jeden typ maszyny; 96 + 32 sceny; ceny z listy Brev z 26.10.2026; w 15 z 96 scen testu A katalog Objaverse nie był jeszcze dostępny (scenariusz nieco lżejszy); w teście B jedna scena padła na braku strefy spawnu (poprawione w kodzie). Liczby odtwarza \texttt{benchmark\_report.py}.}
+
+
+\end{document}

@@ -31,7 +31,7 @@ def _dims(obj):
 def inspect_assets(cfg_path):
     cfg = config.load(config.resolve(cfg_path))
     catalog = assets_mod.Catalog.from_config(
-        config.resolve(cfg["objects"]["assets_file"]),
+        config.resolve_all(cfg["objects"]["catalogs"]),
         config.resolve_all(cfg["objects"]["model_dirs"]),
     )
 
@@ -108,7 +108,7 @@ def inspect_scene(scene_path, pattern):
 
 def main():
     parser = argparse.ArgumentParser(description="Inspect assets or a scene .blend")
-    parser.add_argument("--config", default="config_scene.yaml")
+    parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--assets", action="store_true", help="inspect the asset catalogue")
     parser.add_argument("--scene", default=None, help="path to a scene .blend to inspect")
     parser.add_argument("--pattern", default=None, help="override the spawn zone regex")

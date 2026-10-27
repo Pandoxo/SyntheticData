@@ -1,0 +1,432 @@
+{
+ "scene": "forest_2.blend",
+ "crop_radius_m": 25.0,
+ "total_objects": 340,
+ "zones": [
+  {
+   "name": "spawn_5",
+   "manual": true,
+   "center": [
+    -17.431285858154297,
+    -22.10148048400879,
+    -0.1688317507505417
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.040",
+    "tree.025",
+    "tree.022",
+    "tree.019",
+    "tree.018",
+    "tree.016",
+    "tree.013",
+    "tree.010",
+    "tree.008",
+    "tree.006",
+    "tree.005",
+    "tree.004",
+    "tree.003",
+    "tree.002",
+    "Procedural fence generator",
+    "Plane.023",
+    "leaf.002",
+    "spawn_5"
+   ]
+  },
+  {
+   "name": "spawn_4",
+   "manual": true,
+   "center": [
+    -24.105026245117188,
+    -11.647672653198242,
+    -0.44429129362106323
+   ],
+   "size": [
+    2.0,
+    1.9957275390625
+   ],
+   "objects": [
+    "tree.040",
+    "tree.025",
+    "tree.022",
+    "tree.019",
+    "tree.018",
+    "tree.016",
+    "tree.013",
+    "tree.010",
+    "tree.009",
+    "tree.008",
+    "tree.006",
+    "tree.005",
+    "tree.004",
+    "tree.003",
+    "tree.002",
+    "Procedural fence generator",
+    "Plane.943",
+    "Plane.942",
+    "Plane.939",
+    "Plane.938",
+    "Plane.934",
+    "Plane.929",
+    "Plane.928",
+    "Plane.1097",
+    "Plane.1096",
+    "Plane.1093",
+    "Plane.1092",
+    "Plane.1088",
+    "Plane.1083",
+    "Plane.1082",
+    "Plane.023",
+    "leaf.002",
+    "spawn_4"
+   ]
+  },
+  {
+   "name": "spawn_3",
+   "manual": true,
+   "center": [
+    -24.105026245117188,
+    -16.217819213867188,
+    -0.5007404685020447
+   ],
+   "size": [
+    2.0,
+    1.9957275390625
+   ],
+   "objects": [
+    "tree.040",
+    "tree.025",
+    "tree.022",
+    "tree.019",
+    "tree.018",
+    "tree.016",
+    "tree.013",
+    "tree.010",
+    "tree.009",
+    "tree.008",
+    "tree.006",
+    "tree.005",
+    "tree.004",
+    "tree.003",
+    "tree.002",
+    "Procedural fence generator",
+    "Plane.023",
+    "leaf.002",
+    "spawn_3"
+   ]
+  },
+  {
+   "name": "spawn_2",
+   "manual": true,
+   "center": [
+    -23.551788330078125,
+    -25.8441219329834,
+    -0.26851439476013184
+   ],
+   "size": [
+    2.0,
+    1.9957275390625
+   ],
+   "objects": [
+    "tree.040",
+    "tree.025",
+    "tree.022",
+    "tree.019",
+    "tree.016",
+    "tree.013",
+    "tree.010",
+    "tree.008",
+    "tree.006",
+    "tree.005",
+    "tree.004",
+    "tree.003",
+    "tree.002",
+    "Procedural fence generator",
+    "Plane.023",
+    "leaf.002",
+    "spawn_2"
+   ]
+  },
+  {
+   "name": "spawn_1",
+   "manual": true,
+   "center": [
+    -28.750110626220703,
+    -4.789154052734375,
+    -0.32247018814086914
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.040",
+    "tree.025",
+    "tree.022",
+    "tree.019",
+    "tree.018",
+    "tree.017",
+    "tree.016",
+    "tree.015",
+    "tree.013",
+    "tree.010",
+    "tree.009",
+    "tree.008",
+    "tree.005",
+    "tree.004",
+    "tree.003",
+    "tree.002",
+    "tree.001",
+    "Procedural fence generator",
+    "Plane.023",
+    "leaf.002",
+    "spawn_1"
+   ]
+  },
+  {
+   "name": "auto_00",
+   "manual": false,
+   "center": [
+    -56.554457653313875,
+    -0.00673675537109375,
+    -0.5899124145507812
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.015",
+    "tree.008",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_01",
+   "manual": false,
+   "center": [
+    -46.054457653313875,
+    11.993263244628906,
+    -0.6923637390136719
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.022",
+    "tree.017",
+    "tree.015",
+    "tree.011",
+    "tree.009",
+    "tree.008",
+    "tree.001",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_02",
+   "manual": false,
+   "center": [
+    -51.054457653313875,
+    5.493263244628906,
+    -0.6122188568115234
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.022",
+    "tree.015",
+    "tree.011",
+    "tree.009",
+    "tree.008",
+    "tree.001",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_03",
+   "manual": false,
+   "center": [
+    -28.054457653313875,
+    -46.006736755371094,
+    1.1083564758300781
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.013",
+    "tree.006",
+    "tree.005",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_04",
+   "manual": false,
+   "center": [
+    -46.054457653313875,
+    -11.506736755371094,
+    -0.5938739776611328
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.022",
+    "tree.019",
+    "tree.009",
+    "tree.008",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_05",
+   "manual": false,
+   "center": [
+    -51.554457653313875,
+    11.493263244628906,
+    -0.6790485382080078
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.022",
+    "tree.015",
+    "tree.011",
+    "tree.009",
+    "tree.008",
+    "tree.001",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_06",
+   "manual": false,
+   "center": [
+    -49.054457653313875,
+    -6.006736755371094,
+    -0.5938758850097656
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.022",
+    "tree.019",
+    "tree.015",
+    "tree.009",
+    "tree.008",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_07",
+   "manual": false,
+   "center": [
+    -47.054457653313875,
+    3.4932632446289062,
+    -0.6014060974121094
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.022",
+    "tree.015",
+    "tree.011",
+    "tree.009",
+    "tree.008",
+    "tree.001",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_08",
+   "manual": false,
+   "center": [
+    -47.554457653313875,
+    -15.506736755371094,
+    -0.5938720703125
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.022",
+    "tree.019",
+    "tree.008",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_09",
+   "manual": false,
+   "center": [
+    -54.554457653313875,
+    -5.006736755371094,
+    -0.5938739776611328
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.015",
+    "tree.008",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_10",
+   "manual": false,
+   "center": [
+    -56.554457653313875,
+    -9.506736755371094,
+    -0.5938568115234375
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.008",
+    "Plane.023"
+   ]
+  },
+  {
+   "name": "auto_11",
+   "manual": false,
+   "center": [
+    -52.054457653313875,
+    26.493263244628906,
+    -0.9865436553955078
+   ],
+   "size": [
+    2.0,
+    2.0
+   ],
+   "objects": [
+    "tree.015",
+    "tree.011",
+    "tree.009",
+    "tree.008",
+    "tree.001",
+    "Plane.023"
+   ]
+  }
+ ]
+}

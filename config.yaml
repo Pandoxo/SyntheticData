@@ -1,92 +1,225 @@
-# Ground-plane variant: trash on a bare slab under an HDRI.
+# Main dataset config: litter seen by a small ground robot.
+#
 # Every randomisation range lives here so tuning the distribution never means
-# touching the generator. See config_scene.yaml for the real-environment variant.
+# touching the generator. Sections, in pipeline order:
+#   environments / procedural / scene  - what world each scene is built in
+#   hdri / lights                      - lighting
+#   objects / realism / physics        - the litter, how it looks, how it falls
+#   camera                             - robot / arm / general rigs and their mix
+#   annotations                        - what gets written
 
-output_dir: "output/plane"
-num_scenes: 50            # scenes rendered by run_batch.py
-views_per_scene: 6        # camera poses per scene (cheap - the scene is already built)
-seed: 42
+output_dir: "output/robot_v1"
+num_scenes: 200            # scenes rendered by run_batch.py
+views_per_scene: 12        # frames per scene - building a scene is the slow part
+seed: 7
 
-resolution: [640, 640]
-render_samples: 128
-noise_threshold: 0.01     # stop sampling a pixel early once it is clean enough; null disables
-denoiser: "OPTIX"         # "OPTIX" (NVIDIA GPU), "INTEL" (OpenImageDenoise, CPU) or null
-depth_output: false
+resolution: [960, 720]     # 4:3 like most robot cameras; downscale at train time
+render_samples: 64
+noise_threshold: 0.02      # stop sampling a pixel early once it is clean enough
+denoiser: "OPTIX"          # "OPTIX" (NVIDIA GPU), "INTEL" (OpenImageDenoise, CPU) or null
+depth_output: true
 
-objects:
-  assets_file: "assets.yaml"
-  model_dirs:
-    # resources/objects holds one item per .blend. Do not add
-    # resources/objects_needs_split: the glob is recursive and those files hold
-    # several items each.
-    - "resources/objects"
-    - "~/blenderkit_data/models"
-  min_objects_per_scene: 3
-  max_objects_per_scene: 8
+assets_root: "assets"      # written by fetch_assets.py
 
-ground:
-  size_m: 20.0
-  thickness_m: 0.2
-  color_range: [[0.15, 0.15, 0.15], [0.6, 0.6, 0.6]]
-  roughness_range: [0.4, 1.0]
+# --------------------------------------------------------------- environments
 
-spawn:
-  zone_size_m: 1.0        # side length of the square patch objects are dropped into
+environments:              # relative weights of the two world types
+  procedural: 0.8
+  scene: 0.2
+
+procedural:
+  biome_weights:
+    sidewalk: 0.26
+    street: 0.12
+    lawn: 0.16
+    park_path: 0.14
+    forest: 0.1
+    gravel: 0.07
+    plaza: 0.07
+    studio: 0.08           # one material, little else - mostly useful for arm views
+  extent_m: 60             # ground reaches +-60 m: the horizon at 10 cm camera height
+  default_tile_m: 2.0      # texture tile size when the source does not say
+  models_per_scene:        # model files drawn per group for one scene (memory/time)
+    urban_props: 6
+    trees: 2
+    rocks: 3
+    ground_cover: 5
+    grass: 2
+    litter: 0
+  focus_half_m: [2.0, 4.0] # litter lands within this many metres of the origin
+  zones: [1, 3]            # spawn zones per scene, each on one strip
+  facade_height_m: [3.0, 14.0]
+  props_min_gap_m: 1.0     # props start this far outside the litter area
+  props_max_dist_m: 22.0
+  clutter_density_per_m2: 0.6
+  clutter_level: [0.3, 1.6]
+  clutter_radius_m: 7.0
+  clutter_scale: [0.6, 1.4]
+  bury_probability: 0.6    # chance an item on soft ground is sunk into it
+  canopy_probability: 0.3
+  canopy:
+    size_m: [6.0, 14.0]
+    height_m: [3.0, 7.0]
+    coverage: [0.35, 0.7]
+  grass:
+    density_per_m2: [60, 160]  # clumps per square metre
+    radius_m: 9.0
+    falloff: 0.6
+    trash_clearance: 0.45      # fraction of an item's footprint kept free of clumps
+    robot_clearance_m: 0.25    # the robot drove here - no grass in front of its lens
+    styles:                    # clump scale ranges
+      mowed: [0.35, 0.7]
+      normal: [0.6, 1.1]
+      long: [0.9, 1.6]
+
+scene:
+  files:
+    - "scenes/factory.blend"
+    - "scenes/forest.blend"
+    - "scenes/forest_2.blend"
+    - "scenes/home.blend"
+    - "scenes/warta.blend"
+  spawn_zone_pattern: "spawn_.*"
+  load_scene_lights: false
+  crop_radius_m: 25.0      # load only objects within this distance of the spawn patch
+  auto_zones:              # prepare_scenes.py
+    enabled: true
+    grid_step_m: 0.5
+    search_half_m: 60.0    # only search this far from the middle of the scene
+    patch_size_m: 2.0
+    flatness_tol_m: 0.04
+    max_above_local_ground_m: 0.3
+    min_separation_m: 4.0
+    max_patches: 12
+
+# ------------------------------------------------------------------- lighting
 
 hdri:
+  # HDRIs from assets/ (fetch_assets.py) are always used; these folders add more.
   folders:
     - "resources/haven/hdris"
-    - "~/blenderkit_data/hdrs"
-  strength_range: [0.7, 1.5]
+  strength_range: [0.6, 1.5]
   rotation_range_deg: [0, 360]   # rotates the sun and every shadow with it
-  # Point lights are only added under HDRIs whose filename contains one of these.
+  # Point lights are only added under HDRIs that are night shots (from the asset
+  # manifest) or whose filename contains one of these.
   dark_patterns: ["night", "moonless", "dusk", "evening", "lamp", "indoor"]
 
 lights:
-  always: false           # true = add point lights regardless of the HDRI
+  always: false
   type: "POINT"
   count_range: [1, 3]
   energy_range: [50, 400]
-  radius_range: [3, 8]
+  radius_range: [2, 7]
 
-camera:
-  focal_length_range_mm: [25, 85]
-  # Camera distance is derived from the subject's real size and the focal length so
-  # the subject fills this fraction of the frame - see capture._framing_distance.
-  framing_fraction_range: [0.25, 0.80]
-  distance_limits_m: [0.25, 8.0]  # hard clamp on the derived distance
-  close_up_probability: 0.35      # chance of framing a single item instead of a cluster
-  cluster_radius_m: 1.0          # a view frames one item plus neighbours within this radius
-  min_object_frame_fraction: 0.06 # smallest item must span at least this much of the frame
-  elevation_range_deg: [15, 80]
-  inplane_rotation_range_deg: [-8, 8]
-  aim_jitter_frac: 0.25           # off-centre framing, as a fraction of subject size
-  min_height_above_poi: 0.15      # keep the camera out of the dirt; null disables
-  min_obstacle_distance: null     # nothing to clip into on a bare plane
-  min_visible_targets: 1          # reject poses where the ray grid finds no trash
-  check_rays: 20                  # sqrt of the ray grid used by the validity checks
-  max_pose_attempts: 60
+# --------------------------------------------------------------------- litter
+
+objects:
+  catalogs:                # the first one defines the classes
+    - "assets.yaml"
+    - "catalog/polyhaven.yaml"
+    - "catalog/local.yaml"
+    - "catalog/objaverse.yaml"
+  model_dirs:
+    # Searched recursively by the `match:` rules. Do not add
+    # resources/objects_needs_split: those files hold several items each.
+    - "resources/objects"
+    - "~/blenderkit_data/models"
+  # Classes are drawn by these weights first, then a model within the class - so the
+  # mix does not follow whichever class happens to have the most models.
+  class_weights:
+    bottle_plastic: 1.5
+    bottle_glass: 0.8
+    can: 1.5
+    paper: 1.3
+    cup: 1.0
+    plastic_film: 1.3
+    cigarette: 1.3
+    container: 1.0
+    small_item: 0.8
+    other: 0.6
+  min_objects_per_scene: 3
+  max_objects_per_scene: 9
+
+realism:
+  deform:
+    probability: 0.35
+    crush_strength_frac: [0.03, 0.10]
+    bend_deg: [10, 50]
+    flatten_factor: [0.35, 0.8]
+  grime:
+    probability: 0.55
+    strength: [0.15, 0.6]
+    desaturate: [0.0, 0.45]
 
 physics:
-  # No collider settings here: on the bare plane the visible ground slab is itself the
-  # passive rigid body. config_scene.yaml has the proxy-collider knobs.
+  collider: "box"          # scene environments: "mesh" for sloped or uneven zones
+  collider_thickness_m: 0.2
+  collider_margin_m: 0.3
   ground_friction: 0.8
   object_friction: 0.6
   linear_damping: 0.06
   angular_damping: 0.2
-  drop_height_range: [0.05, 0.30]   # metres above the zone surface
-  zone_inset_frac: 0.08           # keep drop points away from the zone edge
+  drop_height_range: [0.05, 0.30]
+  zone_inset_frac: 0.08
   max_placement_tries: 500
   min_simulation_time: 1.0
   max_simulation_time: 6.0
   check_object_interval: 0.5
-  substeps_per_frame: 20          # raised from the default 10; thin items tunnel at 10
+  substeps_per_frame: 20   # raised from the default 10; thin items tunnel at 10
   solver_iters: 15
-  escape_tolerance_m: 1.0         # objects that end up further outside a zone are dropped
+  escape_tolerance_m: 1.0
+
+# --------------------------------------------------------------------- camera
+
+camera:
+  rig_weights:             # share of frames per rig
+    robot: 0.4
+    arm: 0.3
+    general: 0.3
+  empty_frame_probability: 0.06  # frames aimed away from all litter (hard negatives)
+  clip_start_m: 0.005
+  check_rays: 24           # sqrt of the ray grid used by the validity checks
+  min_visible_targets: 1
+  min_obstacle_distance: null
+  max_pose_attempts: 80
+
+  robot:                   # the robot's front camera
+    height_m: [0.06, 0.16]
+    pitch_deg: [-28, 3]    # negative looks down
+    roll_deg: [-3, 3]
+    hfov_deg: [65, 105]
+    target_distance_m: [0.25, 4.0]   # drawn log-uniformly: close items are common
+    yaw_offset_frac: 0.85  # the target can sit anywhere across 85% of the width
+    max_ground_step_m: 0.35
+    min_obstacle_distance: 0.02
+    check_rays: 32         # small far items fall between a coarser grid's rays
+
+  arm:                     # gripper camera above an item
+    height_m: [0.15, 0.6]
+    elevation_deg: [45, 90]
+    hfov_deg: [60, 90]
+    aim_jitter_m: 0.08
+    roll_deg: [-180, 180]
+    min_obstacle_distance: 0.05
+
+  general:                 # person-height photographer
+    focal_length_range_mm: [20, 85]
+    framing_fraction_range: [0.15, 0.7]
+    distance_limits_m: [0.3, 8.0]
+    close_up_probability: 0.35
+    cluster_radius_m: 1.2
+    min_object_frame_fraction: 0.06
+    elevation_range_deg: [15, 75]
+    inplane_rotation_range_deg: [-8, 8]
+    aim_jitter_frac: 0.25
+    min_height_above_poi: 0.15
+    min_obstacle_distance: 0.2
+
+# ---------------------------------------------------------------- annotations
 
 annotations:
-  min_visible_pixels: 120         # drop annotations smaller than this after occlusion
-  drop_frames_without_targets: true
+  min_visible_pixels: 120  # drop annotations smaller than this after occlusion
+  drop_frames_without_targets: true   # deliberate negatives are kept regardless
   color_file_format: "PNG"
-  mask_encoding_format: "rle"     # "rle" or "polygon"
-  write_hdf5: false               # COCO is the primary output; hdf5 is extra
+  mask_encoding_format: "rle"
+  write_hdf5: false

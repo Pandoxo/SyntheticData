@@ -1,0 +1,92 @@
+# What fetch_assets.py downloads, and from where.
+#
+# Everything here is CC0 (Poly Haven, ambientCG), so no attribution is legally
+# required - fetch_assets.py still records source, id, authors and licence of every
+# asset in assets/manifest.jsonl, because the trash catalogue mixes in CC-BY models
+# that do need it, and one manifest is easier to audit than two.
+#
+# Profiles pick resolution and how much of each group to take. `dev` is a small,
+# fast subset for working on a laptop; `full` is what the render machines use.
+#
+#     .venv/bin/python fetch_assets.py --profile dev
+#     .venv/bin/python fetch_assets.py --profile full --jobs 16
+
+root: "assets"
+
+profiles:
+  dev:
+    texture_res: "1k"
+    hdri_res: "1k"
+    model_res: "1k"
+    acg_res: "1K-JPG"
+    limit_per_group: 8        # first N (sorted by id) of every group below
+  full:
+    texture_res: "2k"
+    hdri_res: "2k"
+    model_res: "2k"
+    acg_res: "2K-JPG"
+    limit_per_group: null
+
+polyhaven:
+  # Ground materials, by group. A texture is taken when it carries `outdoor` and at
+  # least one of `any_of`; `exclude` drops ids containing any of the substrings.
+  # Aerial scans (30x30 m per tile) are useless at 10 cm and are excluded.
+  textures:
+    ground:
+      any_of: [asphalt, road, cobblestone, gravel, terrain, sand, concrete, floor, rock]
+      require: [outdoor]
+      exclude: [aerial, moon, snow, ice, lava, wall, roof, plaster, wood_, planks,
+                tiles_0, marble, carpet]
+    facade:
+      any_of: [brick, wall, plaster, concrete]
+      require: [outdoor]
+      exclude: [floor, aerial, ground, road, asphalt, gravel, roof]
+      limit: 60
+
+  hdris:
+    outdoor:
+      any_of: [outdoor]
+      exclude_categories: [pure skies]
+    skies:
+      any_of: [pure skies]
+      limit: 30
+
+  # Groups whose models also get a glTF copy (see fetch_assets.py).
+  gltf_fallback_groups: [litter]
+
+  # Models are listed by id - each one was picked for a role in the procedural
+  # environments (sdlib/procedural.py reads these group names).
+  models:
+    grass: [grass_medium_01, grass_medium_02, grass_bermuda_01]
+    ground_cover: [moss_01, dandelion_01, weed_plant_02, nettle_plant, celandine_01,
+                   periwinkle_plant, shrub_01, shrub_02, shrub_03, shrub_04,
+                   bark_debris_01, dry_branches_medium_01, root_cluster_01,
+                   root_cluster_02, single_root, pine_roots, fern_02]
+    rocks: [stone_01, rock_07, rock_09, rock_moss_set_01, rock_moss_set_02,
+            sand_rocks_small_01, namaqualand_stones_01, namaqualand_rocks_01,
+            boulder_01]
+    urban_props: [fire_hydrant, water_manhole_cover, metal_trash_can, utility_box_01,
+                  utility_box_02, concrete_road_barrier, concrete_road_barrier_02,
+                  street_lamp_01, street_lamp_02, modular_street_seating,
+                  modular_electricity_poles, exterior_aircon_unit,
+                  wooden_picnic_table, painted_wooden_bench, planter_box_01,
+                  planter_box_02, planter_pot_clay, old_tyre, rusted_wheel_rim_01,
+                  WetFloorSign_01, standing_chalkboard_01, potted_plant_01,
+                  potted_plant_02, tree_stump_01, tree_stump_02, dead_tree_trunk]
+    trees: [island_tree_01, island_tree_02, island_tree_03, tree_small_02,
+            jacaranda_tree, pine_tree_01, fir_tree_01, fir_sapling,
+            pine_sapling_small, pine_sapling_medium]
+    # Single-item litter, added to the trash catalogue (catalog/polyhaven.yaml).
+    litter: [can_rusted, cardboard_box_01, plastic_bottle_gallon, cigarette_pack,
+             multi_cleaner_bottle, drain_cleaner, all_purpose_cleaner, oil_tin,
+             leather_cleaner_can, lubricant_spray, cleaner_tin_01, trashbag,
+             compost_bag_02, long_life_food]
+
+ambientcg:
+  # ambientCG category names (the `cat` / displayCategory field), by group.
+  materials:
+    ground: [Ground, Asphalt, Gravel, Road, Rock, Rocks, Scattered Leaves, Grass,
+             Moss, Paving Stones, Concrete, Pathway, Wood Chips, Tactile Paving, Clay]
+    facade: [Bricks, Facade, Painted Plaster, Plaster, Painted Bricks]
+    # Grime overlays for the trash itself (sdlib/realism.py).
+    imperfections: [Surface Imperfections, Smear, Fingerprints, Scratches]

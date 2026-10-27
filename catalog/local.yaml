@@ -1,0 +1,16 @@
+# Models downloaded by hand that are not under a `model_dirs` folder.
+
+assets:
+  - path: "resources/objects_extra/can_crushed_highpoly/can_crushed_highpoly.fbx"
+    class: can
+    longest_m: 0.11
+    deformable: false        # already crushed
+  - path: "resources/objects_extra/can_straight_highpoly/can_straight_highpoly.fbx"
+    class: can
+    longest_m: 0.12
+  - path: "resources/objects_extra/cigarette_butt/cigarette_butt.fbx"
+    class: cigarette
+    longest_m: 0.035         # a smoked butt, not a whole cigarette
+    scale_jitter: 0.25
+    mass_kg: 0.001
+    deformable: false
